@@ -12,6 +12,7 @@ import hudson.security.SecurityMode;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -45,12 +46,17 @@ public class CreateJobAdvanced extends ItemListener {
 			return;
 		
 		Job job = (Job)item;
+		
+		//if you create the job with template, need to get informations
+		AuthorizationMatrixProperty auth = (AuthorizationMatrixProperty)job.getProperty(AuthorizationMatrixProperty.class);
+		if (auth == null){
+			auth = new AuthorizationMatrixProperty();
+		}
+		
+		auth.setUseProjectSecurity(true);
+		String sid = Hudson.getAuthentication().getName();
+		
 		try {
-			AuthorizationMatrixProperty auth = new AuthorizationMatrixProperty();
-			auth.setUseProjectSecurity(true);
-			
-			String sid = Hudson.getAuthentication().getName();
-			
 			/* Problem !! I need to add configuration in Authorization matrix property and it's unpossible
 			 * because the method is protected. 
 			*/
