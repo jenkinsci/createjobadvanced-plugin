@@ -12,10 +12,16 @@ import hudson.security.SecurityMode;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.collections.map.HashedMap;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -37,7 +43,6 @@ public class CreateJobAdvanced extends ItemListener {
 	@Override
 	public void onCreated(Item item) {
 		
-		//test if the item is a job
 		if (! (item instanceof Job))
 			return;
 		
@@ -47,40 +52,49 @@ public class CreateJobAdvanced extends ItemListener {
 		
 		Job job = (Job)item;
 		
+		Map<Permission, Set<String>> permissions = null;
+		
 		//if you create the job with template, need to get informations
 		AuthorizationMatrixProperty auth = (AuthorizationMatrixProperty)job.getProperty(AuthorizationMatrixProperty.class);
-		if (auth == null){
-			auth = new AuthorizationMatrixProperty();
+		if (auth != null){
+			permissions = new HashMap<Permission, Set<String>>(auth.getGrantedPermissions());
+			try {
+				job.removeProperty(AuthorizationMatrixProperty.class);
+			} catch (IOException e) {
+				log.log(Level.SEVERE,"problem to remove granted permissions (template or copy job)",e);
+			}
+		}else {
+			permissions= new HashMap<Permission, Set<String>>();
 		}
 		
-		auth.setUseProjectSecurity(true);
 		String sid = Hudson.getAuthentication().getName();
 		
+		configurePermission(permissions, Item.CONFIGURE, sid);
+		configurePermission(permissions, Item.READ, sid);
+		configurePermission(permissions, Item.BUILD, sid);
+		configurePermission(permissions, Item.WORKSPACE, sid);
+		configurePermission(permissions, Item.DELETE, sid);
+		
 		try {
-			/* Problem !! I need to add configuration in Authorization matrix property and it's unpossible
-			 * because the method is protected. 
-			*/
-			Method add = auth.getClass().getDeclaredMethod("add", Permission.class,String.class);
-			add.setAccessible(true);
-			add.invoke(auth, Item.CONFIGURE,sid);
-			add.invoke(auth, Item.READ,sid);
-			add.invoke(auth, Item.BUILD,sid);
-			add.invoke(auth, Item.WORKSPACE,sid);
-			add.invoke(auth, Item.DELETE,sid);
-			job.addProperty(auth);
-			
+			AuthorizationMatrixProperty authProperty =new AuthorizationMatrixProperty(permissions);
+			job.addProperty(authProperty);
 			log.info("Create Job " + item.getDisplayName() +" with right on " + sid);
-						
 		} catch (IOException e) {
-			log.log(Level.SEVERE,"problem to set right to owner",e);
-		} catch (NoSuchMethodException e) {
-			log.log(Level.SEVERE,"can't modify add method from protected to public",e);
-		} catch (IllegalArgumentException e) {
-			log.log(Level.SEVERE,"can't modify add method from protected to public",e);
-		} catch (IllegalAccessException e) {
-			log.log(Level.SEVERE,"can't modify add method from protected to public",e);
-		} catch (InvocationTargetException e) {
-			log.log(Level.SEVERE,"can't modify add method from protected to public",e);
+			log.log(Level.SEVERE,"problem to add granted permissions",e);
+		}
+	}
+	
+	private void configurePermission(Map<Permission, Set<String>> permissions, Permission permission , String sid){
+		
+		Set<String> sidPermission = permissions.get(permission);
+		if (sidPermission == null){
+			Set<String> sidSet = new HashSet<String>();
+			sidSet.add(sid);
+			permissions.put(permission,sidSet);
+		}else{
+			if (!sidPermission.contains(sid)){
+				sidPermission.add(sid);
+			}
 		}
 	}
 }
