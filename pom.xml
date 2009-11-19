@@ -3,12 +3,12 @@
 	<parent>
 		<groupId>org.jvnet.hudson.plugins</groupId>
 		<artifactId>plugin</artifactId>
-		<version>1.323</version>
+		<version>1.334</version>
 	</parent>
 
 	<groupId>org.jvnet.hudson.plugins</groupId>
 	<artifactId>createjobadvanced</artifactId>
-	<version>1.1-SNAPSHOT</version>
+	<version>1.2</version>
 	<name>Create Job Advanced</name>
 	<packaging>hpi</packaging>
 
@@ -45,4 +45,10 @@
 		<url>http://pmaven1/nexus/content/groups/public/</url>
 		</pluginRepository> </pluginRepositories>
 	-->
+
+  <scm>
+    <connection>scm:svn:https://guest@svn.dev.java.net/svn/hudson/tags/createjobadvanced-1.2</connection>
+    <developerConnection>scm:svn:https://svn.dev.java.net/svn/hudson/tags/createjobadvanced-1.2</developerConnection>
+    <url>https://hudson.dev.java.net/source/browse/hudson/tags/createjobadvanced-1.2</url>
+  </scm>
 </project>
