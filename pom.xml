@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>org.jvnet.hudson.plugins</groupId>
 		<artifactId>plugin</artifactId>
-		<version>1.334</version>
+		<version>1.353</version>
 	</parent>
 
 	<groupId>org.jvnet.hudson.plugins</groupId>
@@ -27,6 +27,7 @@
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.0.2</version>
 				<configuration>
 					<source>1.6</source>
 					<target>1.6</target>

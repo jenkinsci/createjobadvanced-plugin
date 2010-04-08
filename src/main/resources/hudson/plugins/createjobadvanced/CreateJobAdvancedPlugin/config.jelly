@@ -1,0 +1,33 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" 
+         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+ 
+  <f:section title="${%CJAInstallations}">
+    <f:entry title="${%security}" description="${%securitydesc}">
+        <f:checkbox name="cja.security"  checked="${it.autoOwnerRights}"/> 
+    </f:entry>
+     <f:entry title="${%jobspacesinname}">
+        <f:checkbox name="cja.jobspacesinname" checked="${it.replaceSpace}"/> 
+    </f:entry>
+    
+    <f:block>
+		  <table>
+		    <f:optionalBlock name="cja.activeLogRotator" title="${%logrotator}" checked="${it.activeLogRotator}">
+		      <f:entry title="${%daysToKeep}" description="${%logrotatorDesc}">
+		        <f:textbox name="cja.daysToKeep" value="${it.daysToKeep}"/>
+		      </f:entry>
+		       <f:entry title="${%numToKeep}" description="${%logrotatorDesc}">
+		        <f:textbox name="cja.numToKeep" value="${it.numToKeep}"/>
+		      </f:entry>
+		       <f:entry title="${%artifactDaysToKeep}" description="${%logrotatorDesc}">
+		        <f:textbox name="cja.artifactDaysToKeep" value="${it.artifactDaysToKeep}"/>
+		      </f:entry>
+		       <f:entry title="${%artifactNumToKeep}" description="${%logrotatorDesc}">
+		        <f:textbox name="cja.artifactNumToKeep" value="${it.artifactNumToKeep}"/>
+		      </f:entry>
+		    </f:optionalBlock>
+		  </table>
+	</f:block>
+    
+    
+  </f:section>
+</j:jelly>
