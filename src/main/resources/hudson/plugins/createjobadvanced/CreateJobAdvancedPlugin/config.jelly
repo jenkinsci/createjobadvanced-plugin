@@ -5,6 +5,9 @@
     <f:entry title="${%security}" help="/plugin/createjobadvanced/security.html">
         <f:checkbox name="cja.security"  checked="${it.autoOwnerRights}"/> 
     </f:entry>
+    <f:entry title="${%public}" help="/plugin/createjobadvanced/public.html">
+        <f:checkbox name="cja.public"  checked="${it.autoPublicBrowse}"/> 
+    </f:entry>
      <f:entry title="${%jobspacesinname}">
         <f:checkbox name="cja.jobspacesinname" checked="${it.replaceSpace}"/> 
     </f:entry>

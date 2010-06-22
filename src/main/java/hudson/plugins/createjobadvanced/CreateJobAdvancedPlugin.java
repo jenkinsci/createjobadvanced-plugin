@@ -24,6 +24,7 @@ public class CreateJobAdvancedPlugin extends Plugin {
     static Logger log = Logger.getLogger(CreateJobAdvancedPlugin.class.getName());
 
     private boolean autoOwnerRights;
+    private boolean autoPublicBrowse;
     private boolean replaceSpace;
 
     private boolean activeLogRotator;
@@ -52,6 +53,12 @@ public class CreateJobAdvancedPlugin extends Plugin {
 	    autoOwnerRights = false;
 	} else {
 	    autoOwnerRights = true;
+	}
+
+	if (req.getParameter("cja.public") == null || req.getParameter("cja.public") == "false") {
+	    autoPublicBrowse = false;
+	} else {
+	    autoPublicBrowse = true;
 	}
 
 	if (req.getParameter("cja.jobspacesinname") == null || req.getParameter("cja.jobspacesinname") == "false") {
@@ -95,6 +102,10 @@ public class CreateJobAdvancedPlugin extends Plugin {
 
     public boolean isAutoOwnerRights() {
 	return autoOwnerRights;
+    }
+
+    public boolean isAutoPublicBrowse() {
+	return autoPublicBrowse;
     }
 
     public boolean isReplaceSpace() {
