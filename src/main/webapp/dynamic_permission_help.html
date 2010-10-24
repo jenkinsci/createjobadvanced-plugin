@@ -1,0 +1,41 @@
+<div>Dynamic permission definitions allow you to automaticly grant
+permissions to specifig groups at job creation time. You can define a
+regular expression to get information from the jobs name. e.g. if all
+your jobs follow a naming standard, like this: '<i>group.GROUP.FreeForm</i>',
+you can define a pattern like '<i>group.(.*).(.*)</i>' and reuse the
+regular expression groups in the group format.<br />
+e.g. <br />
+<table>
+	<tr>
+		<td>Job name pattern:</td>
+		<td>job.([A-Z]{3}).(.*)</td>
+		<td>this is a regular expression and creates two regex groups:
+		{0} and {1}</td>
+	</tr>
+	<tr>
+		<td>Group format:</td>
+		<td><pre>perm.{0}.Developer</pre></td>
+		<td>a format to construct a group with, (pattern references (to
+		the groups of the job name pattern) are optional, this allows to
+		define final group names to)</td>
+	</tr>
+	<tr>
+		<td>Permissions:</td>
+		<td></td>
+		<td>check the permissions you would like the group to have for the newly created
+		job</td>
+	</tr>
+	<tr>
+		<td>Job name:</td>
+		<td><pre>job.ABC.ProjectAJob</pre></td>
+		<td>the name of the new job</td>
+	</tr>
+	<tr>
+		<td>Group assigned:</td>
+		<td><pre>perm.ABC.Developer</pre></td>
+		<td>the final group assigend to the job - ABC from got extracted
+		from the job name and used in the group format at the place of {0}.
+		This group will have the selected permissions for the job.</td>
+	</tr>
+</table>
+</div>

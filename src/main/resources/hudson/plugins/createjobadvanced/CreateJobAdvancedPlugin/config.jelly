@@ -1,36 +1,71 @@
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" 
-         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
- 
-  <f:section title="${%CJAInstallations}">
-    <f:entry title="${%security}" help="/plugin/createjobadvanced/security.html">
-        <f:checkbox name="cja.security"  checked="${it.autoOwnerRights}"/> 
-    </f:entry>
-    <f:entry title="${%public}" help="/plugin/createjobadvanced/public.html">
-        <f:checkbox name="cja.public"  checked="${it.autoPublicBrowse}"/> 
-    </f:entry>
-     <f:entry title="${%jobspacesinname}">
-        <f:checkbox name="cja.jobspacesinname" checked="${it.replaceSpace}"/> 
-    </f:entry>
-    
-    <f:block>
-		  <table>
-		    <f:optionalBlock name="cja.activeLogRotator" title="${%logrotator}" checked="${it.activeLogRotator}">
-		      <f:entry title="${%daysToKeep}" description="${%logrotatorDesc}">
-		        <f:textbox name="cja.daysToKeep" value="${it.daysToKeep}"/>
-		      </f:entry>
-		       <f:entry title="${%numToKeep}" description="${%logrotatorDesc}">
-		        <f:textbox name="cja.numToKeep" value="${it.numToKeep}"/>
-		      </f:entry>
-		       <f:entry title="${%artifactDaysToKeep}" description="${%logrotatorDesc}">
-		        <f:textbox name="cja.artifactDaysToKeep" value="${it.artifactDaysToKeep}"/>
-		      </f:entry>
-		       <f:entry title="${%artifactNumToKeep}" description="${%logrotatorDesc}">
-		        <f:textbox name="cja.artifactNumToKeep" value="${it.artifactNumToKeep}"/>
-		      </f:entry>
-		    </f:optionalBlock>
-		  </table>
-	</f:block>
-    
-    
-  </f:section>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
+	xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+
+	<f:section title="${%CJAInstallations}">
+		<f:entry title="${%security}" help="/plugin/createjobadvanced/security.html">
+			<f:checkbox name="cja.security" checked="${it.autoOwnerRights}" />
+		</f:entry>
+		<f:entry title="${%public}" help="/plugin/createjobadvanced/public.html">
+			<f:checkbox name="cja.public" checked="${it.autoPublicBrowse}" />
+		</f:entry>
+		<f:entry title="${%jobspacesinname}">
+			<f:checkbox name="cja.jobspacesinname" checked="${it.replaceSpace}" />
+		</f:entry>
+
+		<f:block>
+			<table>
+				<f:optionalBlock name="cja.activeLogRotator" title="${%logrotator}" checked="${it.activeLogRotator}">
+					<f:entry title="${%daysToKeep}" description="${%logrotatorDesc}">
+						<f:textbox name="cja.daysToKeep" value="${it.daysToKeep}" />
+					</f:entry>
+					<f:entry title="${%numToKeep}" description="${%logrotatorDesc}">
+						<f:textbox name="cja.numToKeep" value="${it.numToKeep}" />
+					</f:entry>
+					<f:entry title="${%artifactDaysToKeep}" description="${%logrotatorDesc}">
+						<f:textbox name="cja.artifactDaysToKeep" value="${it.artifactDaysToKeep}" />
+					</f:entry>
+					<f:entry title="${%artifactNumToKeep}" description="${%logrotatorDesc}">
+						<f:textbox name="cja.artifactNumToKeep" value="${it.artifactNumToKeep}" />
+					</f:entry>
+				</f:optionalBlock>
+			</table>
+		</f:block>
+		<f:block>
+			<table>
+			  <f:optionalBlock name="cja.activeDynamicPermissions"
+					title="${%dynamicPermissions}" checked="${it.activeDynamicPermissions}" help="/plugin/createjobadvanced/dynamic_permission_help.html"> 
+					
+					<f:entry title="${%Job name pattern}">
+						<f:textbox name="cja.extractPattern" value="${it.extractPattern}" />
+					</f:entry>
+					
+					<f:entry title="${groups}">
+					    <f:repeatable var="dynCfg" items="${it.dynamicPermissionConfigs}" name="cfgs" noAddButton="true" minimum="1">
+					      <table width="100%">
+					      
+							<f:entry title="${%Group format}" >
+								<f:textbox name="groupFormat" value="${dynCfg.groupFormat}" />
+							</f:entry>
+							
+							<f:entry title="${%Permissions}" name="checkedPermissions" >
+								<j:forEach var="perm" items="${it.allPossiblePermissions}" >
+									<j:out value="${perm.name} (${perm.group.title})" />: <f:checkbox name="[${perm.id}]" value="[${perm.id}]" checked="${dynCfg.isPermissionChecked(perm)}"/>
+								</j:forEach>
+							</f:entry>
+							
+					        <f:entry>
+					          <div align="right" >
+					            <input type="button" value="${%Add group definition}" class="repeatable-add show-if-last" />
+					            <input type="button" value="${%Delete}" class="repeatable-delete show-if-not-only" style="margin-left: 1em;" />
+					          </div>
+					        </f:entry>
+					      </table>
+					    </f:repeatable>
+					 </f:entry>
+
+			 	</f:optionalBlock> 
+			</table>
+		</f:block>
+
+	</f:section>
 </j:jelly>
