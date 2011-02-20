@@ -1,10 +1,10 @@
-<div>Dynamic permission definitions allow you to automaticly grant
-permissions to specifig groups at job creation time. You can define a
-regular expression to get information from the jobs name. e.g. if all
-your jobs follow a naming standard, like this: '<i>group.GROUP.FreeForm</i>',
+<div>Dynamic permission definitions allow you to automatically grant
+permissions to specific groups at job creation time. You can define a
+regular expression to get information from the job's name. For example, if all
+your jobs follow a naming standard like this: '<i>group.GROUP.FreeForm</i>',
 you can define a pattern like '<i>group.(.*).(.*)</i>' and reuse the
 regular expression groups in the group format.<br />
-e.g. <br />
+Examples:<br />
 <table>
 	<tr>
 		<td>Job name pattern:</td>
@@ -33,7 +33,7 @@ e.g. <br />
 	<tr>
 		<td>Group assigned:</td>
 		<td><pre>perm.ABC.Developer</pre></td>
-		<td>the final group assigend to the job - ABC from got extracted
+		<td>the final group assiged to the job - ABC from got extracted
 		from the job name and used in the group format at the place of {0}.
 		This group will have the selected permissions for the job.</td>
 	</tr>
