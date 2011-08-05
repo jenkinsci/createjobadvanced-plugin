@@ -7,7 +7,7 @@
 	</parent>
 
 	<artifactId>createjobadvanced</artifactId>
-	<version>1.6</version>
+	<version>1.7-SNAPSHOT</version>
 	<name>Create Job Advanced</name>
 	<packaging>hpi</packaging>
 	<url>http://wiki.jenkins-ci.org/display/JENKINS/Create+Job+Advanced+Plugin</url>
