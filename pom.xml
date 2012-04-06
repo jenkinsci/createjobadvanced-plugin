@@ -41,10 +41,10 @@
 	<!--
 		get every artifact through maven.glassfish.org, which proxies all the
 		artifacts that we need <repositories> <repository>
-		<id>m.g.o-public</id>
+		<id>repo.jenkins-ci.org</id>
 		<url>http://pmaven1/nexus/content/groups/public/</url> </repository>
 		</repositories> <pluginRepositories> <pluginRepository>
-		<id>m.g.o-public</id>
+		<id>repo.jenkins-ci.org</id>
 		<url>http://pmaven1/nexus/content/groups/public/</url>
 		</pluginRepository> </pluginRepositories>
 	-->
@@ -54,4 +54,20 @@
 		<developerConnection>scm:git:git@github.com:jenkinsci/createjobadvanced-plugin.git</developerConnection>
 		<url>https://github.com/jenkinsci/createjobadvanced-plugin</url>
 	</scm>
-</project>
+
+    <repositories>
+        <repository>
+            <id>repo.jenkins-ci.org</id>
+            <url>http://repo.jenkins-ci.org/public/</url>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>repo.jenkins-ci.org</id>
+            <url>http://repo.jenkins-ci.org/public/</url>
+        </pluginRepository>
+    </pluginRepositories>
+</project>  
+  
+
