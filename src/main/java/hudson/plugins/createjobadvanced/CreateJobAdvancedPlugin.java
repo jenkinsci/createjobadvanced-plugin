@@ -1,7 +1,6 @@
 package hudson.plugins.createjobadvanced;
 
 import hudson.Plugin;
-import hudson.Util;
 import hudson.model.Descriptor.FormException;
 import hudson.security.Permission;
 import hudson.security.PermissionGroup;
@@ -41,7 +40,7 @@ public class CreateJobAdvancedPlugin extends Plugin {
 
 	private boolean activeDynamicPermissions;
 	private String extractPattern;
-
+	
 	private List<DynamicPermissionConfig> dynamicPermissionConfigs = new ArrayList<DynamicPermissionConfig>();
 
 	/**
@@ -64,88 +63,49 @@ public class CreateJobAdvancedPlugin extends Plugin {
 	@Override
 	public void configure(StaplerRequest req, JSONObject formData) throws IOException, ServletException, FormException {
 
-		// formData.optBoolean("autoOwnerRights",autoOwnerRights);
+		autoOwnerRights = formData.optBoolean("security", false);
+		autoPublicBrowse = formData.optBoolean("public", false);
+		replaceSpace = formData.optBoolean("jobspacesinname", false);
 
-		if (req.getParameter("cja.security") == null || req.getParameter("cja.security") == "false") {
-			autoOwnerRights = false;
-		} else {
-			autoOwnerRights = true;
+		final JSONObject activeLogRotatorJson = formData.optJSONObject("activeLogRotator");
+
+		if (activeLogRotatorJson != null) {
+		    activeLogRotator = true;
+				daysToKeep = activeLogRotatorJson.optInt("daysToKeep", -1);
+				numToKeep = activeLogRotatorJson.optInt("numToKeep", -1);
+				artifactDaysToKeep = activeLogRotatorJson.optInt("artifactDaysToKeep", -1);
+				artifactNumToKeep = activeLogRotatorJson.optInt("artifactNumToKeep", -1);
+		}else{
+		    activeLogRotator = false;
 		}
 
-		if (req.getParameter("cja.public") == null || req.getParameter("cja.public") == "false") {
-			autoPublicBrowse = false;
-		} else {
-			autoPublicBrowse = true;
-		}
+		final JSONObject activeDynamicPermissionsJson = formData.optJSONObject("activeDynamicPermissions");
 
-		if (req.getParameter("cja.jobspacesinname") == null || req.getParameter("cja.jobspacesinname") == "false") {
-			replaceSpace = false;
-		} else {
-			replaceSpace = true;
-		}
+		if (activeDynamicPermissionsJson != null) {
+		    activeDynamicPermissions = true;
+		    extractPattern = activeDynamicPermissionsJson.optString("extractPattern", "");
 
-		if (req.getParameter("cja.activeLogRotator") == null || req.getParameter("cja.activeLogRotator") == "false") {
-			activeLogRotator = false;
-		} else {
-			activeLogRotator = true;
-		}
-
-		if (activeLogRotator) {
-
-			try {
-				daysToKeep = Integer.valueOf(Util.fixNull(req.getParameter("cja.daysToKeep")));
-			} catch (Exception e) {
-				daysToKeep = -1;
-			}
-			try {
-				numToKeep = Integer.valueOf(Util.fixNull(req.getParameter("cja.numToKeep")));
-			} catch (Exception e) {
-				numToKeep = -1;
-			}
-			try {
-				artifactDaysToKeep = Integer.valueOf(Util.fixNull(req.getParameter("cja.artifactDaysToKeep")));
-			} catch (Exception e) {
-				artifactDaysToKeep = -1;
-			}
-			try {
-				artifactNumToKeep = Integer.valueOf(Util.fixNull(req.getParameter("cja.artifactNumToKeep")));
-			} catch (Exception e) {
-				artifactNumToKeep = -1;
-			}
-		}
-
-		if (req.getParameter("cja.activeDynamicPermissions") == null || req.getParameter("cja.activeDynamicPermissions") == "false") {
-			activeDynamicPermissions = false;
-		} else {
-			activeDynamicPermissions = true;
-		}
-
-		if (activeDynamicPermissions) {
-			if (req.getParameter("cja.extractPattern") != null) {
-				extractPattern = req.getParameter("cja.extractPattern");
-			}
-			for (Object o : JSONArray.fromObject(formData.get("activeDynamicPermissions"))) {
-				JSONObject jo = (JSONObject) o;
-
-				dynamicPermissionConfigs.clear();
-				final Object cfgs = jo.get("cfgs");
-				if (cfgs instanceof JSONArray) {
-					final JSONArray jsonArray = (JSONArray) cfgs;
-					for (Object object : jsonArray) {
-						addDynamicPermission(req, (JSONObject) object);
-					}
-				} else {
-					// there might be only one single dynamic permission
-					addDynamicPermission(req, (JSONObject) cfgs);
+			dynamicPermissionConfigs.clear();
+			final Object cfgs = activeDynamicPermissionsJson.get("cfgs");
+			if (cfgs instanceof JSONArray) {
+				final JSONArray jsonArray = (JSONArray) cfgs;
+				for (Object object : jsonArray) {
+					addDynamicPermission(req, (JSONObject) object);
 				}
-
+			} else {
+				// there might be only one single dynamic permission
+				addDynamicPermission(req, (JSONObject) cfgs);
 			}
 
+		}else{
+		    activeDynamicPermissions = false;
+		    extractPattern = null;
+		    dynamicPermissionConfigs.clear();
 		}
 
 		save();
 	}
-
+	
 	/**
 	 * adds a dynamic permission configuration with the data extracted form the
 	 * jsonObject.
@@ -176,13 +136,15 @@ public class CreateJobAdvancedPlugin extends Plugin {
 		return enabledPerms;
 	}
 
-	private static void addEnabledPermissionsForGroup(final List<Permission> enabledPerms, Class owner) {
+	private static void addEnabledPermissionsForGroup(final List<Permission> enabledPerms, Class<?> owner) {
 		final PermissionGroup permissionGroup = PermissionGroup.get(owner);
-		final List<Permission> permissions = permissionGroup.getPermissions();
-		for (Permission permission : permissions) {
-			if (permission.enabled) {
-				enabledPerms.add(permission);
-			}
+		if(permissionGroup != null){
+		    final List<Permission> permissions = permissionGroup.getPermissions();
+    		for (Permission permission : permissions) {
+    			if (permission.enabled) {
+    				enabledPerms.add(permission);
+    			}
+    		}
 		}
 	}
 
@@ -231,5 +193,5 @@ public class CreateJobAdvancedPlugin extends Plugin {
 	public boolean isActiveDynamicPermissions() {
 		return activeDynamicPermissions;
 	}
-
+	
 }
