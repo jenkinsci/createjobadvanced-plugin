@@ -117,6 +117,14 @@
 		<url>http://pmaven1/nexus/content/groups/public/</url>
 		</pluginRepository> </pluginRepositories>
 	-->
+	<dependencies>
+		<dependency>
+			<groupId>org.jenkins-ci.main</groupId>
+			<artifactId>maven-plugin</artifactId>
+			<version>${project.parent.version}</version>
+			<optional>true</optional>
+		</dependency>
+	</dependencies>
 
 	<scm>
 		<connection>scm:git:git://github.com/jenkinsci/createjobadvanced-plugin.git</connection>
