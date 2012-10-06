@@ -41,6 +41,9 @@ public class CreateJobAdvancedPlugin extends Plugin {
 	private boolean activeDynamicPermissions;
 	private String extractPattern;
 	
+	private boolean mvnArchivingDisabled;
+	private boolean mvnPerModuleEmail;
+
 	private List<DynamicPermissionConfig> dynamicPermissionConfigs = new ArrayList<DynamicPermissionConfig>();
 
 	/**
@@ -66,6 +69,9 @@ public class CreateJobAdvancedPlugin extends Plugin {
 		autoOwnerRights = formData.optBoolean("security", false);
 		autoPublicBrowse = formData.optBoolean("public", false);
 		replaceSpace = formData.optBoolean("jobspacesinname", false);
+		
+		mvnArchivingDisabled = formData.optBoolean("mvnArchivingDisabled", false);
+		mvnPerModuleEmail = formData.optBoolean("mvnPerModuleEmail", false);
 
 		final JSONObject activeLogRotatorJson = formData.optJSONObject("activeLogRotator");
 
@@ -194,4 +200,12 @@ public class CreateJobAdvancedPlugin extends Plugin {
 		return activeDynamicPermissions;
 	}
 	
+	public boolean isMvnArchivingDisabled() {
+	    return mvnArchivingDisabled;
+    }
+	
+	public boolean isMvnPerModuleEmail() {
+        return mvnPerModuleEmail;
+    }
+
 }

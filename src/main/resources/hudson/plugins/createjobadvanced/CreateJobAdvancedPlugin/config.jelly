@@ -2,6 +2,7 @@
 	xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
 	<f:section title="${%CJAInstallations}">
+	
 		<f:entry title="${%security}" help="/plugin/createjobadvanced/security.html">
 			<f:checkbox name="cja.security" checked="${it.autoOwnerRights}" />
 		</f:entry>
@@ -11,7 +12,12 @@
 		<f:entry title="${%jobspacesinname}" help="/plugin/createjobadvanced/help-replaceSpaceInName.html">
 			<f:checkbox name="cja.jobspacesinname" checked="${it.replaceSpace}" />
 		</f:entry>
-
+        <f:entry title="${%mvnArchivingDisabled}" help="/plugin/createjobadvanced/help-mvnArchivingDisabled.html">
+           <f:checkbox name="cja.mvnArchivingDisabled" checked="${it.isMvnArchivingDisabled()}" />
+        </f:entry>
+        <f:entry title="${%mvnPerModuleEmail}" help="/plugin/createjobadvanced/help-mvnPerModuleEmail.html">
+           <f:checkbox name="cja.mvnPerModuleEmail" checked="${it.isMvnPerModuleEmail()}" />
+        </f:entry>
 		<f:block>
 			<table>
 				<f:optionalBlock name="cja.activeLogRotator" title="${%logrotator}" checked="${it.activeLogRotator}">
@@ -63,7 +69,7 @@
 					    </f:repeatable>
 					 </f:entry>
 
-			 	</f:optionalBlock> 
+			 	</f:optionalBlock>
 			</table>
 		</f:block>
 	</f:section>
