@@ -107,16 +107,6 @@
 		</plugins>
 	</build>
 
-	<!--
-		get every artifact through maven.glassfish.org, which proxies all the
-		artifacts that we need <repositories> <repository>
-		<id>repo.jenkins-ci.org</id>
-		<url>http://pmaven1/nexus/content/groups/public/</url> </repository>
-		</repositories> <pluginRepositories> <pluginRepository>
-		<id>repo.jenkins-ci.org</id>
-		<url>http://pmaven1/nexus/content/groups/public/</url>
-		</pluginRepository> </pluginRepositories>
-	-->
 	<dependencies>
 		<dependency>
 			<groupId>org.jenkins-ci.main</groupId>
