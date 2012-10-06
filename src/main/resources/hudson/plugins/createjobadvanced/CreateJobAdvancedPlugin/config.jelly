@@ -2,16 +2,22 @@
 	xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
 	<f:section title="${%CJAInstallations}">
+	
 		<f:entry title="${%security}" help="/plugin/createjobadvanced/security.html">
 			<f:checkbox name="cja.security" checked="${it.autoOwnerRights}" />
 		</f:entry>
 		<f:entry title="${%public}" help="/plugin/createjobadvanced/public.html">
 			<f:checkbox name="cja.public" checked="${it.autoPublicBrowse}" />
 		</f:entry>
-		<f:entry title="${%jobspacesinname}">
+		<f:entry title="${%jobspacesinname}" help="/plugin/createjobadvanced/help-replaceSpaceInName.html">
 			<f:checkbox name="cja.jobspacesinname" checked="${it.replaceSpace}" />
 		</f:entry>
-
+        <f:entry title="${%mvnArchivingDisabled}" help="/plugin/createjobadvanced/help-mvnArchivingDisabled.html">
+           <f:checkbox name="cja.mvnArchivingDisabled" checked="${it.isMvnArchivingDisabled()}" />
+        </f:entry>
+        <f:entry title="${%mvnPerModuleEmail}" help="/plugin/createjobadvanced/help-mvnPerModuleEmail.html">
+           <f:checkbox name="cja.mvnPerModuleEmail" checked="${it.isMvnPerModuleEmail()}" />
+        </f:entry>
 		<f:block>
 			<table>
 				<f:optionalBlock name="cja.activeLogRotator" title="${%logrotator}" checked="${it.activeLogRotator}">
@@ -35,7 +41,7 @@
 			  <f:optionalBlock name="cja.activeDynamicPermissions"
 					title="${%dynamicPermissions}" checked="${it.activeDynamicPermissions}" help="/plugin/createjobadvanced/dynamic_permission_help.html"> 
 					
-					<f:entry title="${%Job name pattern}">
+					<f:entry title="${%extractPattern}">
 						<f:textbox name="cja.extractPattern" value="${it.extractPattern}" />
 					</f:entry>
 					
@@ -43,11 +49,11 @@
 					    <f:repeatable var="dynCfg" items="${it.dynamicPermissionConfigs}" name="cfgs" noAddButton="true" minimum="1">
 					      <table width="100%">
 					      
-							<f:entry title="${%Group format}" >
+							<f:entry title="${%groupFormat}" >
 								<f:textbox name="groupFormat" value="${dynCfg.groupFormat}" />
 							</f:entry>
 							
-							<f:entry title="${%Permissions}" name="checkedPermissions" >
+							<f:entry title="${%checkedPermissions}" name="checkedPermissions" >
 								<j:forEach var="perm" items="${it.allPossiblePermissions}" >
 									<j:out value="${perm.name} (${perm.group.title})" />: <f:checkbox name="[${perm.id}]" value="[${perm.id}]" checked="${dynCfg.isPermissionChecked(perm)}"/>
 								</j:forEach>
@@ -55,7 +61,7 @@
 							
 					        <f:entry>
 					          <div align="right" >
-					            <input type="button" value="${%Add group definition}" class="repeatable-add show-if-last" />
+					            <input type="button" value="${%addGroup}" class="repeatable-add show-if-last" />
 					            <input type="button" value="${%Delete}" class="repeatable-delete show-if-not-only" style="margin-left: 1em;" />
 					          </div>
 					        </f:entry>
@@ -63,9 +69,8 @@
 					    </f:repeatable>
 					 </f:entry>
 
-			 	</f:optionalBlock> 
+			 	</f:optionalBlock>
 			</table>
 		</f:block>
-
 	</f:section>
 </j:jelly>

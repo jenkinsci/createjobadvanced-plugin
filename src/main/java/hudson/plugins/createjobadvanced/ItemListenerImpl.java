@@ -23,16 +23,22 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import jenkins.model.Jenkins;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 
 @Extension
 public class ItemListenerImpl extends ItemListener {
 
 	static Logger log = Logger.getLogger(CreateJobAdvancedPlugin.class.getName());
+	
+	private MavenConfigurer mavenConfigurer = null;
 
 	@DataBoundConstructor
 	public ItemListenerImpl() {
-		// log.info("ItemListenerImpl started");
+	    if(Jenkins.getInstance().getPlugin("maven-plugin") != null) {
+	        mavenConfigurer = new MavenConfigurer();
+	    }
 	}
 
 	@Override
@@ -43,11 +49,15 @@ public class ItemListenerImpl extends ItemListener {
 			return;
 		final Job<?, ?> job = (Job<?, ?>) item;
 
-		CreateJobAdvancedPlugin cja = Hudson.getInstance().getPlugin(CreateJobAdvancedPlugin.class);
+		CreateJobAdvancedPlugin cja = getPlugin();
 		if (cja.isReplaceSpace()) {
 			renameJob(job);
 		}
 	}
+
+    private CreateJobAdvancedPlugin getPlugin() {
+        return Hudson.getInstance().getPlugin(CreateJobAdvancedPlugin.class);
+    }
 
 	@Override
 	public void onCreated(Item item) {
@@ -55,7 +65,7 @@ public class ItemListenerImpl extends ItemListener {
 			return;
 		final Job<?, ?> job = (Job<?, ?>) item;
 
-		CreateJobAdvancedPlugin cja = Hudson.getInstance().getPlugin(CreateJobAdvancedPlugin.class);
+		CreateJobAdvancedPlugin cja = getPlugin();
 
 		if (cja.isReplaceSpace()) {
 			renameJob(job);
@@ -81,8 +91,17 @@ public class ItemListenerImpl extends ItemListener {
 		if (cja.isActiveLogRotator()) {
 			activateLogRotator(job, cja);
 		}
+		
+		
+		if (mavenConfigurer != null) {
+		    mavenConfigurer.onCreated(job);
+		}
+		
+		
 	}
 
+	
+	
 	private void securityGrantDynamicPermissions(final Job<?, ?> job, CreateJobAdvancedPlugin cja) {
 		String patternStr = cja.getExtractPattern();// com.([A-Z]{3}).(.*)
 
