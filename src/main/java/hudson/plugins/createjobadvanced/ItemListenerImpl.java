@@ -61,6 +61,7 @@ public class ItemListenerImpl extends ItemListener {
 
 	@Override
 	public void onCreated(Item item) {
+	    log.finer("> ItemListenerImpl.onCreated()");
 		if (!(item instanceof Job))
 			return;
 		final Job<?, ?> job = (Job<?, ?>) item;
@@ -97,11 +98,9 @@ public class ItemListenerImpl extends ItemListener {
 		    mavenConfigurer.onCreated(job);
 		}
 		
-		
+		log.finer("< ItemListenerImpl.onCreated()");
 	}
 
-	
-	
 	private void securityGrantDynamicPermissions(final Job<?, ?> job, CreateJobAdvancedPlugin cja) {
 		String patternStr = cja.getExtractPattern();// com.([A-Z]{3}).(.*)
 
@@ -147,7 +146,12 @@ public class ItemListenerImpl extends ItemListener {
 
 		LogRotator logrotator = new LogRotator(cja.getDaysToKeep(), cja.getNumToKeep(), cja.getArtifactDaysToKeep(), cja.getArtifactNumToKeep());
 
-		job.setLogRotator(logrotator);
+		try {
+		    // with 1.503, the signature changed and might now throw an IOException 
+            job.setLogRotator(logrotator);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "error setting Logrotater", e);
+        }
 	}
 
 	private void renameJob(final Job<?, ?> job) {
@@ -171,7 +175,7 @@ public class ItemListenerImpl extends ItemListener {
 		try {
 			AuthorizationMatrixProperty authProperty = new AuthorizationMatrixProperty(permissions);
 			job.addProperty(authProperty);
-			log.info("Granding rights to [" + sid + "] for newly-created job " + job.getDisplayName());
+			log.info("Granting rights to [" + sid + "] for newly-created job " + job.getDisplayName());
 		} catch (IOException e) {
 			log.log(Level.SEVERE, "problem to add granted permissions", e);
 		}
