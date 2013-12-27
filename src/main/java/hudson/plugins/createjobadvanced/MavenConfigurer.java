@@ -24,10 +24,9 @@
 package hudson.plugins.createjobadvanced;
 
 import hudson.maven.MavenModuleSet;
+import hudson.maven.reporters.MavenMailer;
 import hudson.model.Hudson;
 import hudson.model.Job;
-import hudson.util.VersionNumber;
-import jenkins.model.Jenkins;
 
 /**
  * Changes the configuration of {@link MavenModuleSet}s.
@@ -48,8 +47,11 @@ public class MavenConfigurer {
     private void preConfigureMavenJob(MavenModuleSet job) {
         final CreateJobAdvancedPlugin cja = Hudson.getInstance().getPlugin(CreateJobAdvancedPlugin.class);
         job.setIsArchivingDisabled(cja.isMvnArchivingDisabled());
-        if (Jenkins.getVersion().isNewerThan(new VersionNumber("1.445"))) {
-            Utils.setField(job, "perModuleEmail", new Boolean(cja.isMvnPerModuleEmail()), false);
+        MavenMailer m = job.getReporters().get(MavenMailer.class);
+        if(m != null) {
+            m.perModuleEmail = cja.isMvnPerModuleEmail();
+        } else {
+            job.getReporters().add(new MavenMailer(null, true, false, cja.isMvnPerModuleEmail()));
         }
     }
 
