@@ -1,5 +1,5 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
-	xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+	xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:p="/lib/createjobadvanced">
 
 	<f:section title="${%CJAInstallations}">
 	
@@ -19,7 +19,7 @@
            <f:checkbox name="cja.mvnPerModuleEmail" checked="${it.isMvnPerModuleEmail()}" />
         </f:entry>
 		<f:block>
-			<table>
+			<p:blockWrapper>
 				<f:optionalBlock name="cja.activeLogRotator" title="${%logrotator}" checked="${it.activeLogRotator}">
 					<f:entry title="${%daysToKeep}" description="${%logrotatorDesc}">
 						<f:textbox name="cja.daysToKeep" value="${it.daysToKeep}" />
@@ -34,10 +34,10 @@
 						<f:textbox name="cja.artifactNumToKeep" value="${it.artifactNumToKeep}" />
 					</f:entry>
 				</f:optionalBlock>
-			</table>
+			</p:blockWrapper>
 		</f:block>
 		<f:block>
-			<table>
+			<p:blockWrapper>
 			  <f:optionalBlock name="cja.activeDynamicPermissions"
 					title="${%dynamicPermissions}" checked="${it.activeDynamicPermissions}" help="/plugin/createjobadvanced/dynamic_permission_help.html"> 
 					
@@ -47,16 +47,18 @@
 					
 					<f:entry title="${groups}">
 					    <f:repeatable var="dynCfg" items="${it.dynamicPermissionConfigs}" name="cfgs" noAddButton="true" minimum="1">
-					      <table width="100%">
+					      <p:blockWrapper>
 					      
 							<f:entry title="${%groupFormat}" >
 								<f:textbox name="groupFormat" value="${dynCfg.groupFormat}" />
 							</f:entry>
 							
 							<f:entry title="${%checkedPermissions}" name="checkedPermissions" >
-								<j:forEach var="perm" items="${it.allPossiblePermissions}" >
-									<j:out value="${perm.name} (${perm.group.title})" />: <f:checkbox name="[${perm.id}]" value="[${perm.id}]" checked="${dynCfg.isPermissionChecked(perm)}"/>
-								</j:forEach>
+								<f:entry>
+									<j:forEach var="perm" items="${it.allPossiblePermissions}" >
+										<j:out value="${perm.name} (${perm.group.title})" />: <f:checkbox name="[${perm.id}]" value="[${perm.id}]" checked="${dynCfg.isPermissionChecked(perm)}"/>
+									</j:forEach>
+								</f:entry>
 							</f:entry>
 							
 					        <f:entry>
@@ -65,12 +67,12 @@
 					            <input type="button" value="${%Delete}" class="repeatable-delete show-if-not-only" style="margin-left: 1em;" />
 					          </div>
 					        </f:entry>
-					      </table>
+					      </p:blockWrapper>
 					    </f:repeatable>
 					 </f:entry>
 
 			 	</f:optionalBlock>
-			</table>
+			</p:blockWrapper>
 		</f:block>
 	</f:section>
 </j:jelly>
