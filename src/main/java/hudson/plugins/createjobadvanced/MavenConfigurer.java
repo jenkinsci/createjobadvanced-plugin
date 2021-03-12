@@ -25,8 +25,8 @@ package hudson.plugins.createjobadvanced;
 
 import hudson.maven.MavenModuleSet;
 import hudson.maven.reporters.MavenMailer;
-import hudson.model.Hudson;
 import hudson.model.Job;
+import jenkins.model.Jenkins;
 
 /**
  * Changes the configuration of {@link MavenModuleSet}s.
@@ -45,7 +45,10 @@ public class MavenConfigurer {
     }
 
     private void preConfigureMavenJob(MavenModuleSet job) {
-        final CreateJobAdvancedPlugin cja = Hudson.getInstance().getPlugin(CreateJobAdvancedPlugin.class);
+        final CreateJobAdvancedPlugin cja = Jenkins.get().getPlugin(CreateJobAdvancedPlugin.class);
+        if (cja == null) {
+            throw new IllegalStateException("Cannot retrieve instance of the Create Job Advanced Plugin");
+        }
         job.setIsArchivingDisabled(cja.isMvnArchivingDisabled());
         MavenMailer m = job.getReporters().get(MavenMailer.class);
         if(m != null) {
