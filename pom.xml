@@ -7,7 +7,7 @@
 	</parent>
 
 	<artifactId>createjobadvanced</artifactId>
-	<version>1.9.0</version>
+	<version>1.9.1-SNAPSHOT</version>
 	<name>Create Job Advanced</name>
 	<packaging>hpi</packaging>
 	<url>https://github.com/jenkinsci/createjobadvanced-plugin</url>
@@ -53,7 +53,7 @@
 		<connection>scm:git:git://github.com/jenkinsci/createjobadvanced-plugin.git</connection>
 		<developerConnection>scm:git:git@github.com:jenkinsci/createjobadvanced-plugin.git</developerConnection>
 		<url>https://github.com/jenkinsci/createjobadvanced-plugin</url>
-	  <tag>createjobadvanced-1.9.0</tag>
+	  <tag>HEAD</tag>
   </scm>
 
     <repositories>
