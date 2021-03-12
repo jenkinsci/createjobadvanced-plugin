@@ -5,7 +5,7 @@
 [![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/createjobadvanced.svg?color=blue)](https://plugins.jenkins.io/createjobadvanced)
 
 This plugin extends creating job.  
-When you create a job, it automatically adds all permissions for the creator.
+When you create a job, it automatically adds all permissions for the creator in the [Matrix Authorization Strategy Plugin](https://plugins.jenkins.io/matrix-auth/).
 
 ![](docs/images/createjobadvanced.jpg)
 
