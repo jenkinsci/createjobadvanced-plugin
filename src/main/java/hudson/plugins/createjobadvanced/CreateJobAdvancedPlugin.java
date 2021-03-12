@@ -19,7 +19,6 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.StaplerRequest;
 
 /**
- * @plugin
  * @author Bertrand Gressier
  * 
  */
