@@ -1,5 +1,9 @@
 # Changelog
 
+### Newer releases
+
+See [GitHub Releases](https://github.com/jenkinsci/createjobadvanced-plugin/releases)
+
 ### 1.8 (Dec 29, 2013)
 
 -   update core dependency to 1.532
