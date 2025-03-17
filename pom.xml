@@ -24,7 +24,7 @@
     <properties>
         <revision>1.9.1</revision>
         <changelist>-SNAPSHOT</changelist>    
-        <hpi.compatibleSinceVersion>3.2</hpi.compatibleSinceVersion>
+        <hpi.compatibleSinceVersion>3.60</hpi.compatibleSinceVersion>
         <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
         <jenkins.baseline>2.479</jenkins.baseline>
         <jenkins.version>${jenkins.baseline}.1</jenkins.version>        
@@ -48,13 +48,17 @@
 		<dependency>
 			<groupId>org.jenkins-ci.main</groupId>
 			<artifactId>maven-plugin</artifactId>
-			<version>3.60</version>
 			<optional>true</optional>
 		</dependency>
         <dependency>
 			<groupId>org.jenkins-ci.plugins</groupId>
 			<artifactId>matrix-auth</artifactId>
 		</dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>cloudbees-folder</artifactId>
+            <optional>true</optional>
+        </dependency>
 
         <!--Upper bounds conflict-->
         <dependency>

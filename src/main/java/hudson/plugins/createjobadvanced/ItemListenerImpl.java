@@ -2,6 +2,7 @@ package hudson.plugins.createjobadvanced;
 
 import hudson.Extension;
 import hudson.model.Item;
+import hudson.model.AbstractItem;
 import hudson.model.Hudson;
 import hudson.model.Job;
 import hudson.model.listeners.ItemListener;
@@ -25,9 +26,13 @@ import java.util.regex.Pattern;
 
 import jenkins.model.Jenkins;
 
+import org.jenkinsci.plugins.matrixauth.AuthorizationType;
 import org.jenkinsci.plugins.matrixauth.PermissionEntry;
 import org.jenkinsci.plugins.matrixauth.inheritance.InheritParentStrategy;
 import org.kohsuke.stapler.DataBoundConstructor;
+
+import com.cloudbees.hudson.plugins.folder.AbstractFolder;
+//import com.cloudbees.hudson.plugins.folder.Folder;
 
 @Extension
 public class ItemListenerImpl extends ItemListener {
@@ -47,13 +52,13 @@ public class ItemListenerImpl extends ItemListener {
 	public void onRenamed(Item item, String oldName, String newName) {
 		log.info("renamed " + oldName + " to " + newName);
 
-		if (!(item instanceof Job))
+		if (!(item instanceof Job || item instanceof AbstractFolder))
 			return;
-		final Job<?, ?> job = (Job<?, ?>) item;
+		final AbstractItem abstractItem = (AbstractItem)item;
 
 		CreateJobAdvancedPlugin cja = getPlugin();
 		if (cja.isReplaceSpace()) {
-			renameJob(job);
+			renameJob(abstractItem);
 		}
 	}
 
@@ -64,14 +69,14 @@ public class ItemListenerImpl extends ItemListener {
 	@Override
 	public void onCreated(Item item) {
 	    log.finer("> ItemListenerImpl.onCreated()");
-		if (!(item instanceof Job))
+		if (!(item instanceof Job || item instanceof AbstractFolder))
 			return;
-		final Job<?, ?> job = (Job<?, ?>) item;
+		final AbstractItem abstractItem = (AbstractItem)item;
 
 		CreateJobAdvancedPlugin cja = getPlugin();
 
 		if (cja.isReplaceSpace()) {
-			renameJob(job);
+			renameJob(abstractItem);
 		}
 
 		// hudson must activate security mode for using
@@ -79,38 +84,38 @@ public class ItemListenerImpl extends ItemListener {
 
 			if (cja.isAutoOwnerRights()) {
 				String sid = Hudson.getAuthentication2().getName();
-				securityGrantPermissions(job, sid, new Permission[] { Item.CONFIGURE, Item.BUILD, Item.READ, Item.DELETE, Item.WORKSPACE });
+				securityGrantPermissions(abstractItem, sid, new Permission[] { Item.CONFIGURE, Item.BUILD, Item.READ, Item.DELETE, Item.WORKSPACE },AuthorizationType.USER);
 			}
 
 			if (cja.isAutoPublicBrowse()) {
-				securityGrantPermissions(job, "anonymous", new Permission[] { Item.READ, Item.WORKSPACE });
+				securityGrantPermissions(abstractItem, "anonymous", new Permission[] { Item.READ, Item.WORKSPACE },AuthorizationType.USER);
 			}
 
 			if (cja.isActiveDynamicPermissions()) {
-				securityGrantDynamicPermissions(job, cja);
+				securityGrantDynamicPermissions(abstractItem, cja);
 			}
 		}
 
-		if (cja.isActiveLogRotator()) {
-			activateLogRotator(job, cja);
+		if (cja.isActiveLogRotator() && item instanceof Job) {
+			activateLogRotator((Job<?, ?>)abstractItem, cja);
 		}
 		
 		
-		if (mavenConfigurer != null) {
-		    mavenConfigurer.onCreated(job);
+		if (mavenConfigurer != null && item instanceof Job) {
+		    mavenConfigurer.onCreated((Job<?, ?>)abstractItem);
 		}
 		
 		log.finer("< ItemListenerImpl.onCreated()");
 	}
 
-	private void securityGrantDynamicPermissions(final Job<?, ?> job, CreateJobAdvancedPlugin cja) {
+	private void securityGrantDynamicPermissions(final AbstractItem abstractItem, CreateJobAdvancedPlugin cja) {
 		String patternStr = cja.getExtractPattern();// com.([A-Z]{3}).(.*)
 
 		List<String> groupsList = new ArrayList<String>();
 
 		if (patternStr != null) {
 			Pattern pattern = Pattern.compile(patternStr);
-			Matcher matcher = pattern.matcher(job.getName());
+			Matcher matcher = pattern.matcher(abstractItem.getName());
 			boolean matchFound = matcher.find();
 
 			if (matchFound) {
@@ -135,7 +140,7 @@ public class ItemListenerImpl extends ItemListener {
 				permissionList.add(permForId);
 			}
 
-			securityGrantPermissions(job, newName, (Permission[]) permissionList.toArray(new Permission[permissionList.size()]));
+			securityGrantPermissions(abstractItem, newName, (Permission[]) permissionList.toArray(new Permission[permissionList.size()]),AuthorizationType.GROUP);
 		}
 	}
 
@@ -156,31 +161,85 @@ public class ItemListenerImpl extends ItemListener {
         }
 	}
 
-	private void renameJob(final Job<?, ?> job) {
-		if (job.getName().indexOf(" ") != -1) {
-			try {
-				job.renameTo(job.getName().replaceAll(" ", "-"));
-			} catch (IOException e) {
-				log.log(Level.SEVERE, "error during rename", e);
+	private void renameJob(final AbstractItem abstractItem) {
+		try {
+			if (abstractItem.getName().indexOf(" ") != -1) {
+				if(abstractItem instanceof Job) {
+					renameJob((Job<?,?>) abstractItem);
+				} else {
+					renameJob((AbstractFolder<?>) abstractItem);
+				}
 			}
+		} catch (IOException e) {
+			log.log(Level.SEVERE, "error during rename", e);
 		}
 	}
 
-	private void securityGrantPermissions(final Job<?, ?> job, String sid, Permission[] hudsonPermissions) {
+	private void renameJob(final Job<?, ?> job) throws IOException {
+		job.renameTo(job.getName().replaceAll(" ", "-"));
+	}
 
-		Map<Permission, Set<PermissionEntry>> permissions = initPermissions(job);
+	private void renameJob(final AbstractFolder<?> folder) throws IOException {
+		folder.renameTo(folder.getName().replaceAll(" ", "-"));
+	}	
 
-		for (Permission perm : hudsonPermissions) {
-			configurePermission(permissions, perm, sid);
+	private void securityGrantPermissions(final AbstractItem abstractItem, String sid, Permission[] hudsonPermissions, AuthorizationType type) {
+		PermissionEntry permEnt = new PermissionEntry(AuthorizationType.EITHER, sid);
+		switch (type) {
+			case USER:
+				permEnt = PermissionEntry.user(sid);
+				break;
+			case GROUP:
+				permEnt = PermissionEntry.group(sid);
+				break;
+			case EITHER:
+				break;
 		}
 
+		Map<Permission, Set<PermissionEntry>> permissions = initPermissions(abstractItem);
+		for (Permission perm : hudsonPermissions) {
+			configurePermission(permissions, perm, permEnt);
+		}
 		try {
-			AuthorizationMatrixProperty authProperty = new AuthorizationMatrixProperty(permissions,new InheritParentStrategy());
-			job.addProperty(authProperty);
-			log.info("Granting rights to [" + sid + "] for newly-created job " + job.getDisplayName());
+			if(abstractItem instanceof Job) {
+				addAuthorizationMatrixProperty((Job<?,?>)abstractItem,permissions);
+				log.info("Granting rights to [" + sid + "] for newly-created job " + abstractItem.getDisplayName());
+			} else {
+				addAuthorizationMatrixProperty((AbstractFolder<?>)abstractItem,permissions);
+				log.info("Granting rights to [" + sid + "] for newly-created folder " + abstractItem.getDisplayName());
+			}
 		} catch (IOException e) {
 			log.log(Level.SEVERE, "problem to add granted permissions", e);
 		}
+	}
+
+	private void addAuthorizationMatrixProperty(Job<?,?>job, Map<Permission, Set<PermissionEntry>>permissions) throws IOException {
+		AuthorizationMatrixProperty authProperty = new AuthorizationMatrixProperty(permissions,new InheritParentStrategy());
+		job.addProperty(authProperty);
+	}
+
+	private void addAuthorizationMatrixProperty(AbstractFolder<?>folder, Map<Permission, Set<PermissionEntry>>permissions) throws IOException {
+		
+		com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty authProperty = new FolderAuthorizationMatrixProperty();				
+		for (Permission perm: permissions.keySet()) {
+			for(PermissionEntry permEntry: permissions.get(perm)) {					
+				authProperty.add(perm, permEntry);
+			}
+		}
+		folder.addProperty(authProperty);
+	}
+
+
+	private Map<Permission, Set<PermissionEntry>> initPermissions(final AbstractItem abstractItem) {
+
+		Map<Permission, Set<PermissionEntry>> permissions = null;
+		if(abstractItem instanceof Job) {
+			permissions = initPermissions((Job<?, ?>)abstractItem);
+		} else {
+			permissions = initPermissions((AbstractFolder<?>)abstractItem);
+		}
+
+		return permissions;
 	}
 
 	private Map<Permission, Set<PermissionEntry>> initPermissions(final Job<?, ?> job) {
@@ -203,16 +262,33 @@ public class ItemListenerImpl extends ItemListener {
 		return permissions;
 	}
 
-	private void configurePermission(Map<Permission, Set<PermissionEntry>> permissions, Permission permission, String sid) {
+	private Map<Permission, Set<PermissionEntry>> initPermissions(final AbstractFolder<?> folder) {
+
+		Map<Permission, Set<PermissionEntry>> permissions = null;
+
+		com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty authProperty = folder.getProperties().get(com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty.class);
+		if (authProperty!=null) {
+			permissions =  new HashMap<Permission, Set<PermissionEntry>>(authProperty.getGrantedPermissionEntries());
+			List<?> folderProperties = folder.getProperties();
+			folderProperties.remove(authProperty);
+		} else {
+			permissions = new HashMap<Permission, Set<PermissionEntry>>();
+		}
+
+		return permissions;
+	}
+
+	private void configurePermission(Map<Permission, Set<PermissionEntry>> permissions, Permission permission, PermissionEntry sid) {
 
 		Set<PermissionEntry> sidPermission = permissions.get(permission);
 		if (sidPermission == null) {
 			Set<PermissionEntry> sidSet = new HashSet<PermissionEntry>();
-			sidSet.add(PermissionEntry.user(sid));
+
+			sidSet.add(sid);
 			permissions.put(permission, sidSet);
 		} else {
-			if (!sidPermission.contains(PermissionEntry.user(sid))) {
-				sidPermission.add(PermissionEntry.user(sid));
+			if (!sidPermission.contains(sid)) {
+				sidPermission.add(sid);
 			}
 		}
 	}
