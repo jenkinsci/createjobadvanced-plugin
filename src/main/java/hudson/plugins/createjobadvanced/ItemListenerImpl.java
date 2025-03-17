@@ -25,18 +25,20 @@ import java.util.regex.Pattern;
 
 import jenkins.model.Jenkins;
 
+import org.jenkinsci.plugins.matrixauth.PermissionEntry;
+import org.jenkinsci.plugins.matrixauth.inheritance.InheritParentStrategy;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 @Extension
 public class ItemListenerImpl extends ItemListener {
 
-	static Logger log = Logger.getLogger(CreateJobAdvancedPlugin.class.getName());
+	private static final Logger log = Logger.getLogger(CreateJobAdvancedPlugin.class.getName());
 	
 	private MavenConfigurer mavenConfigurer = null;
 
 	@DataBoundConstructor
 	public ItemListenerImpl() {
-	    if(Jenkins.getInstance().getPlugin("maven-plugin") != null) {
+	    if(Jenkins.getInstanceOrNull().getPlugin("maven-plugin") != null) {
 	        mavenConfigurer = new MavenConfigurer();
 	    }
 	}
@@ -56,7 +58,7 @@ public class ItemListenerImpl extends ItemListener {
 	}
 
     private CreateJobAdvancedPlugin getPlugin() {
-        return Hudson.getInstance().getPlugin(CreateJobAdvancedPlugin.class);
+        return Hudson.getInstanceOrNull().getPlugin(CreateJobAdvancedPlugin.class);
     }
 
 	@Override
@@ -73,10 +75,10 @@ public class ItemListenerImpl extends ItemListener {
 		}
 
 		// hudson must activate security mode for using
-		if (!Hudson.getInstance().getSecurity().equals(SecurityMode.UNSECURED)) {
+		if (!Hudson.getInstanceOrNull().getSecurity().equals(SecurityMode.UNSECURED)) {
 
 			if (cja.isAutoOwnerRights()) {
-				String sid = Hudson.getAuthentication().getName();
+				String sid = Hudson.getAuthentication2().getName();
 				securityGrantPermissions(job, sid, new Permission[] { Item.CONFIGURE, Item.BUILD, Item.READ, Item.DELETE, Item.WORKSPACE });
 			}
 
@@ -140,7 +142,7 @@ public class ItemListenerImpl extends ItemListener {
 	private void activateLogRotator(final Job<?, ?> job, final CreateJobAdvancedPlugin cja) {
 
 		// if template, it's possible that log rotator is already defined
-		if (job.getLogRotator() != null) {
+		if (job.getBuildDiscarder() != null) {
 			return;
 		}
 
@@ -148,7 +150,7 @@ public class ItemListenerImpl extends ItemListener {
 
 		try {
 		    // with 1.503, the signature changed and might now throw an IOException 
-            job.setLogRotator(logrotator);
+            job.setBuildDiscarder(logrotator);
         } catch (Exception e) {
             log.log(Level.SEVERE, "error setting Logrotater", e);
         }
@@ -166,14 +168,14 @@ public class ItemListenerImpl extends ItemListener {
 
 	private void securityGrantPermissions(final Job<?, ?> job, String sid, Permission[] hudsonPermissions) {
 
-		Map<Permission, Set<String>> permissions = initPermissions(job);
+		Map<Permission, Set<PermissionEntry>> permissions = initPermissions(job);
 
 		for (Permission perm : hudsonPermissions) {
 			configurePermission(permissions, perm, sid);
 		}
 
 		try {
-			AuthorizationMatrixProperty authProperty = new AuthorizationMatrixProperty(permissions);
+			AuthorizationMatrixProperty authProperty = new AuthorizationMatrixProperty(permissions,new InheritParentStrategy());
 			job.addProperty(authProperty);
 			log.info("Granting rights to [" + sid + "] for newly-created job " + job.getDisplayName());
 		} catch (IOException e) {
@@ -181,36 +183,36 @@ public class ItemListenerImpl extends ItemListener {
 		}
 	}
 
-	private Map<Permission, Set<String>> initPermissions(final Job<?, ?> job) {
+	private Map<Permission, Set<PermissionEntry>> initPermissions(final Job<?, ?> job) {
 
-		Map<Permission, Set<String>> permissions = null;
+		Map<Permission, Set<PermissionEntry>> permissions = null;
 
 		// if you create the job with template, need to get informations
 		AuthorizationMatrixProperty auth = (AuthorizationMatrixProperty) job.getProperty(AuthorizationMatrixProperty.class);
 		if (auth != null) {
-			permissions = new HashMap<Permission, Set<String>>(auth.getGrantedPermissions());
+			permissions = new HashMap<Permission, Set<PermissionEntry>>(auth.getGrantedPermissionEntries());
 			try {
 				job.removeProperty(AuthorizationMatrixProperty.class);
 			} catch (IOException e) {
 				log.log(Level.SEVERE, "problem to remove granted permissions (template or copy job)", e);
 			}
 		} else {
-			permissions = new HashMap<Permission, Set<String>>();
+			permissions = new HashMap<Permission, Set<PermissionEntry>>();
 		}
 
 		return permissions;
 	}
 
-	private void configurePermission(Map<Permission, Set<String>> permissions, Permission permission, String sid) {
+	private void configurePermission(Map<Permission, Set<PermissionEntry>> permissions, Permission permission, String sid) {
 
-		Set<String> sidPermission = permissions.get(permission);
+		Set<PermissionEntry> sidPermission = permissions.get(permission);
 		if (sidPermission == null) {
-			Set<String> sidSet = new HashSet<String>();
-			sidSet.add(sid);
+			Set<PermissionEntry> sidSet = new HashSet<PermissionEntry>();
+			sidSet.add(PermissionEntry.user(sid));
 			permissions.put(permission, sidSet);
 		} else {
-			if (!sidPermission.contains(sid)) {
-				sidPermission.add(sid);
+			if (!sidPermission.contains(PermissionEntry.user(sid))) {
+				sidPermission.add(PermissionEntry.user(sid));
 			}
 		}
 	}

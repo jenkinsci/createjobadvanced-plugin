@@ -11,12 +11,12 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 /**
  * @author Bertrand Gressier
@@ -25,7 +25,7 @@ import org.kohsuke.stapler.StaplerRequest;
 
 public class CreateJobAdvancedPlugin extends Plugin {
 
-	static Logger log = Logger.getLogger(CreateJobAdvancedPlugin.class.getName());
+	private static final Logger log = Logger.getLogger(CreateJobAdvancedPlugin.class.getName());
 
 	private boolean autoOwnerRights;
 	private boolean autoPublicBrowse;
@@ -52,6 +52,7 @@ public class CreateJobAdvancedPlugin extends Plugin {
 		return dynamicPermissionConfigs;
 	}
 
+	@Deprecated
 	public CreateJobAdvancedPlugin() {
 	}
 
@@ -63,7 +64,7 @@ public class CreateJobAdvancedPlugin extends Plugin {
 	}
 
 	@Override
-	public void configure(StaplerRequest req, JSONObject formData) throws IOException, ServletException, FormException {
+	public void configure(StaplerRequest2 req, JSONObject formData) throws IOException, ServletException, FormException {
 
 		autoOwnerRights = formData.optBoolean("security", false);
 		autoPublicBrowse = formData.optBoolean("public", false);
@@ -116,7 +117,7 @@ public class CreateJobAdvancedPlugin extends Plugin {
 	 * jsonObject.
 	 * 
 	 */
-	private void addDynamicPermission(StaplerRequest req, JSONObject jsonObject) {
+	private void addDynamicPermission(StaplerRequest2 req, JSONObject jsonObject) {
 		final DynamicPermissionConfig dynPerm = req.bindJSON(DynamicPermissionConfig.class, jsonObject);
 
 		// add the enabled permission ids
