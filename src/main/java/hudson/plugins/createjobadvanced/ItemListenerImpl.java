@@ -32,7 +32,6 @@ import org.jenkinsci.plugins.matrixauth.inheritance.InheritParentStrategy;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.cloudbees.hudson.plugins.folder.AbstractFolder;
-//import com.cloudbees.hudson.plugins.folder.Folder;
 
 @Extension
 public class ItemListenerImpl extends ItemListener {
@@ -69,8 +68,9 @@ public class ItemListenerImpl extends ItemListener {
 	@Override
 	public void onCreated(Item item) {
 	    log.finer("> ItemListenerImpl.onCreated()");
-		if (!(item instanceof Job || item instanceof AbstractFolder))
+		if (!(item instanceof Job || item instanceof AbstractFolder)) {
 			return;
+		}
 		final AbstractItem abstractItem = (AbstractItem)item;
 
 		CreateJobAdvancedPlugin cja = getPlugin();
@@ -208,7 +208,7 @@ public class ItemListenerImpl extends ItemListener {
 				addAuthorizationMatrixProperty((AbstractFolder<?>)abstractItem,permissions);
 				log.info("Granting rights to [" + sid + "] for newly-created folder " + abstractItem.getDisplayName());
 			}
-		} catch (IOException e) {
+		} catch (Exception e) {
 			log.log(Level.SEVERE, "problem to add granted permissions", e);
 		}
 	}
@@ -218,9 +218,13 @@ public class ItemListenerImpl extends ItemListener {
 		job.addProperty(authProperty);
 	}
 
-	private void addAuthorizationMatrixProperty(AbstractFolder<?>folder, Map<Permission, Set<PermissionEntry>>permissions) throws IOException {
+	private void addAuthorizationMatrixProperty(AbstractFolder<?>folder, Map<Permission, Set<PermissionEntry>>permissions) throws Exception {
+		com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty.DescriptorImpl propDescriptor = 
+			(com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty.DescriptorImpl)
+				Jenkins.getInstanceOrNull().
+					getDescriptor(com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty.class);
 		
-		com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty authProperty = new FolderAuthorizationMatrixProperty();				
+		com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty authProperty = propDescriptor.create();
 		for (Permission perm: permissions.keySet()) {
 			for(PermissionEntry permEntry: permissions.get(perm)) {					
 				authProperty.add(perm, permEntry);
