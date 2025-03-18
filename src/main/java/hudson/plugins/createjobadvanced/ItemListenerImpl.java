@@ -208,7 +208,7 @@ public class ItemListenerImpl extends ItemListener {
 				addAuthorizationMatrixProperty((AbstractFolder<?>)abstractItem,permissions);
 				log.info("Granting rights to [" + sid + "] for newly-created folder " + abstractItem.getDisplayName());
 			}
-		} catch (Exception e) {
+		} catch (IOException e) {
 			log.log(Level.SEVERE, "problem to add granted permissions", e);
 		}
 	}
@@ -218,7 +218,7 @@ public class ItemListenerImpl extends ItemListener {
 		job.addProperty(authProperty);
 	}
 
-	private void addAuthorizationMatrixProperty(AbstractFolder<?>folder, Map<Permission, Set<PermissionEntry>>permissions) throws Exception {
+	private void addAuthorizationMatrixProperty(AbstractFolder<?>folder, Map<Permission, Set<PermissionEntry>>permissions) throws IOException {
 		com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty.DescriptorImpl propDescriptor = 
 			(com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty.DescriptorImpl)
 				Jenkins.getInstanceOrNull().
