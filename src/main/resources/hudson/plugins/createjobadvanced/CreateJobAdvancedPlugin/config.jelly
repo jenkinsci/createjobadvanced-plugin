@@ -52,50 +52,50 @@
 								<f:entry title="${%groupFormat}" >
 									<f:textbox name="groupFormat" value="${dynCfg.groupFormat}" />
 								</f:entry>
-								<f:entry title="${%checkedPermissions}" name="checkedPermissions" >
-									<f:entry>							
-										<table class="center-align global-matrix-authorization-strategy-table">
-											<tr class="group-row">
-												<j:forEach var="group" items="${it.allPossiblePermissions.keySet()}" >
-													<td class="pane-header" colspan="${it.allPossiblePermissions.get(group).size()}">
-														${group}
-													</td>
-												</j:forEach>
-												<td rowspan="2" class="stop" />
-											</tr>
-											<tr class="caption-row">
+								<table class="center-align global-matrix-authorization-strategy-table">
+									<tr class="group-row">
+										<j:forEach var="group" items="${it.allPossiblePermissions.keySet()}" >
+											<td class="pane-header" colspan="${it.allPossiblePermissions.get(group).size()}">
+												${group}
+											</td>
+										</j:forEach>
+										<td rowspan="2" class="stop" />
+									</tr>
+									<tr class="caption-row">
+										<j:forEach var="group" items="${it.allPossiblePermissions.keySet()}" >
+											<j:forEach var="perm" items="${it.allPossiblePermissions.get(group)}" >
+											<th class="pane" data-html-tooltip="${perm.description}" tooltip="${perm.description}">
+												<span>
+													${perm.name}
+												</span>
+											</th>
+											</j:forEach>
+										</j:forEach>																												
+									</tr>
+									<tr>
+										<f:entry title="${%checkedPermissions}" name="checkedPermissions" >
+											<f:entry>							
 												<j:forEach var="group" items="${it.allPossiblePermissions.keySet()}" >
 													<j:forEach var="perm" items="${it.allPossiblePermissions.get(group)}" >
-													<th class="pane" data-html-tooltip="${perm.description}" tooltip="${perm.description}">
-														<span>
-															${perm.name}
-														</span>
-													</th>
-													</j:forEach>
-												</j:forEach>																												
-											</tr>
-											<tr>
-												<j:forEach var="group" items="${it.allPossiblePermissions.keySet()}" >
-													<j:forEach var="perm" items="${it.allPossiblePermissions.get(group)}" >
-													<td data-implied-by-list="${it.impliedByList(perm)}" data-permission-id="${perm.id}">
-														<f:checkbox name="[${perm.id}]" value="[${perm.id}]" checked="${dynCfg.isPermissionChecked(perm)}"/>
-													</td>
+														<td data-implied-by-list="${it.impliedByList(perm)}" data-permission-id="${perm.id}" data-tooltip-enabled="${%tooltip_enabled(group, perm.name)}" data-tooltip-disabled="${%tooltip_disabled(group, perm.name)}">
+															<f:checkbox name="[${perm.id}]" value="[${perm.id}]" checked="${dynCfg.isPermissionChecked(perm)}"/>
+														</td>
 													</j:forEach>
 												</j:forEach>
-												<td class="stop">
-													<div class="mas-table__cell">
-														<a href="#" class="selectall">
-															<l:icon alt="${%Select all}" src="symbol-select-all plugin-matrix-auth" class="icon-sm"/>
-														</a>
-														<a href="#" class="unselectall">
-															<l:icon alt="${%Unselect all}" src="symbol-unselect-all plugin-matrix-auth" class="icon-sm"/>
-														</a>
-													</div>								
-												</td>									
-											</tr>
-										</table>
-									</f:entry>
-								</f:entry>
+											</f:entry>
+										</f:entry>
+										<td class="stop">
+											<div class="mas-table__cell">
+												<a href="#" class="selectall" tooltip="${%selectall}" data-html-tooltip="${%selectall}">
+													<l:icon alt="${%Select all}" src="symbol-select-all plugin-matrix-auth" class="icon-sm"/>
+												</a>
+												<a href="#" class="unselectall" tooltip="${%unselectall}" data-html-tooltip="${%unselectall}">
+													<l:icon alt="${%Unselect all}" src="symbol-unselect-all plugin-matrix-auth" class="icon-sm"/>
+												</a>
+											</div>								
+										</td>									
+									</tr>
+								</table>
 								<f:entry>
 								<div align="right" >
 									<input type="button" value="${%addGroup}" class="repeatable-add show-if-last" />
