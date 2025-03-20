@@ -7,6 +7,7 @@ import hudson.security.PermissionGroup;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -17,6 +18,9 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.kohsuke.stapler.StaplerRequest2;
+
+import org.apache.commons.lang.StringUtils;
+import java.util.stream.Collectors;
 
 /**
  * @author Bertrand Gressier
@@ -121,36 +125,51 @@ public class CreateJobAdvancedPlugin extends Plugin {
 		final DynamicPermissionConfig dynPerm = req.bindJSON(DynamicPermissionConfig.class, jsonObject);
 
 		// add the enabled permission ids
-		final List<Permission> allPossiblePermissions = getAllPossiblePermissions();
-		for (Permission permission : allPossiblePermissions) {
-			final String enabled = jsonObject.getString(permission.getId());
-			if (Boolean.valueOf(enabled)) {
-				dynPerm.addPermissionId(permission.getId());
-				log.log(Level.FINE, "enable {0}", new String[] { permission.getId() });
+		final HashMap<String,List<Permission>> allPossiblePermissions = getAllPossiblePermissions();
+		for (String group: allPossiblePermissions.keySet()) {
+			for (Permission permission : allPossiblePermissions.get(group)) {
+				final String enabled = jsonObject.getString(permission.getId());
+				if (Boolean.valueOf(enabled)) {
+					dynPerm.addPermissionId(permission.getId());
+					log.log(Level.FINE, "enable {0}", new String[] { permission.getId() });
+				}
 			}
 		}
 
 		dynamicPermissionConfigs.add(dynPerm);
 	}
 
-	public static List<Permission> getAllPossiblePermissions() {
-		final List<Permission> enabledPerms = new ArrayList<Permission>();
+	public static HashMap<String,List<Permission>> getAllPossiblePermissions() {
+		final HashMap<String,List<Permission>> enabledPerms = new HashMap<String,List<Permission>>();
 
-		addEnabledPermissionsForGroup(enabledPerms, hudson.model.Item.class);
 		addEnabledPermissionsForGroup(enabledPerms, hudson.model.Run.class);
+		addEnabledPermissionsForGroup(enabledPerms, hudson.model.Item.class);
 
 		return enabledPerms;
 	}
 
-	private static void addEnabledPermissionsForGroup(final List<Permission> enabledPerms, Class<?> owner) {
+	public static String impliedByList(Permission p) {
+        List<Permission> impliedBys = new ArrayList<>();
+        while (p.impliedBy != null) {
+            p = p.impliedBy;
+            impliedBys.add(p);
+        }
+        return StringUtils.join(impliedBys.stream().map(Permission::getId).collect(Collectors.toList()), " ");
+    }
+
+	private static void addEnabledPermissionsForGroup(final HashMap<String,List<Permission>> allEnabledPerms, Class<?> owner) {
 		final PermissionGroup permissionGroup = PermissionGroup.get(owner);
 		if(permissionGroup != null){
-		    final List<Permission> permissions = permissionGroup.getPermissions();
+	  		final List<Permission> enabledPerms = new ArrayList<Permission>();
+		    List<Permission> permissions = permissionGroup.getPermissions();
     		for (Permission permission : permissions) {
-    			if (permission.enabled) {
+    			if (permission.enabled) {                  	
     				enabledPerms.add(permission);
     			}
     		}
+			if(enabledPerms.size()>0) {
+				allEnabledPerms.put(permissionGroup.title.toString(),enabledPerms);
+			}
 		}
 	}
 
