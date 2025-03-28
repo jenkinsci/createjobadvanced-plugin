@@ -7,7 +7,8 @@ import hudson.security.PermissionGroup;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -125,7 +126,7 @@ public class CreateJobAdvancedPlugin extends Plugin {
 		final DynamicPermissionConfig dynPerm = req.bindJSON(DynamicPermissionConfig.class, jsonObject);
 
 		// add the enabled permission ids
-		final HashMap<String,List<Permission>> allPossiblePermissions = getAllPossiblePermissions();
+		final Map<String,List<Permission>> allPossiblePermissions = getAllPossiblePermissions();
 		for (String group: allPossiblePermissions.keySet()) {
 			for (Permission permission : allPossiblePermissions.get(group)) {
 				final String enabled = jsonObject.getString(permission.getId());
@@ -139,11 +140,11 @@ public class CreateJobAdvancedPlugin extends Plugin {
 		dynamicPermissionConfigs.add(dynPerm);
 	}
 
-	public static HashMap<String,List<Permission>> getAllPossiblePermissions() {
-		final HashMap<String,List<Permission>> enabledPerms = new HashMap<String,List<Permission>>();
+	public static Map<String,List<Permission>> getAllPossiblePermissions() {
+		final Map<String,List<Permission>> enabledPerms = new TreeMap<String,List<Permission>>();
 
-		addEnabledPermissionsForGroup(enabledPerms, hudson.model.Run.class);
 		addEnabledPermissionsForGroup(enabledPerms, hudson.model.Item.class);
+		addEnabledPermissionsForGroup(enabledPerms, hudson.model.Run.class);
 
 		return enabledPerms;
 	}
@@ -157,7 +158,7 @@ public class CreateJobAdvancedPlugin extends Plugin {
         return StringUtils.join(impliedBys.stream().map(Permission::getId).collect(Collectors.toList()), " ");
     }
 
-	private static void addEnabledPermissionsForGroup(final HashMap<String,List<Permission>> allEnabledPerms, Class<?> owner) {
+	private static void addEnabledPermissionsForGroup(final Map<String,List<Permission>> allEnabledPerms, Class<?> owner) {
 		final PermissionGroup permissionGroup = PermissionGroup.get(owner);
 		if(permissionGroup != null){
 	  		final List<Permission> enabledPerms = new ArrayList<Permission>();
