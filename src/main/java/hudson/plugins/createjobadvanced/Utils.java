@@ -23,6 +23,7 @@
  */
 package hudson.plugins.createjobadvanced;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.lang.reflect.Field;
 
 /**
@@ -42,6 +43,7 @@ public class Utils {
      * @param value
      *            the new value for the field
      */
+    @SuppressFBWarnings("REFLF_REFLECTION_MAY_INCREASE_ACCESSIBILITY_OF_FIELD")
     public static void setField(Object targetObject, String fieldName, Object value, boolean failIfError) {
         try {
             Field f = targetObject.getClass().getDeclaredField(fieldName);
