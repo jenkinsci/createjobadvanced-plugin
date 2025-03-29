@@ -13,12 +13,7 @@ import hudson.security.SecurityMode;
 import hudson.tasks.LogRotator;
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -244,7 +239,9 @@ public class ItemListenerImpl extends ItemListener {
                 (com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty.DescriptorImpl)
                         instance.getDescriptor(
                                 com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty.class);
-
+        if (propDescriptor == null) {
+            return;
+        }
         com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty authProperty =
                 propDescriptor.create();
         for (Permission perm : permissions.keySet()) {
