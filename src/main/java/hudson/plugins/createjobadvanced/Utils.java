@@ -45,8 +45,10 @@ public class Utils {
     public static void setField(Object targetObject, String fieldName, Object value, boolean failIfError) {
         try {
             Field f = targetObject.getClass().getDeclaredField(fieldName);
+            boolean accessible = f.isAccessible();
             f.setAccessible(true);
             f.set(targetObject, value);
+            f.setAccessible(accessible);
         } catch (Exception e) {
             if (failIfError) {
                 throw new RuntimeException("failed to set field", e);
