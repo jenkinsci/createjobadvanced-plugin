@@ -3,7 +3,8 @@
 	<parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>		
-		<version>4.16</version>
+		<version>4.88</version>
+        <relativePath />
 	</parent>
 
 	<artifactId>createjobadvanced</artifactId>
@@ -13,16 +14,17 @@
 	<url>https://github.com/jenkinsci/createjobadvanced-plugin</url>
 
     <properties>
-        <jenkins.version>2.249.1</jenkins.version>
-        <java.level>8</java.level>
+        <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
+        <jenkins.baseline>2.462</jenkins.baseline>
+        <jenkins.version>${jenkins.baseline}.3</jenkins.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
-                <artifactId>bom-2.249.x</artifactId>
-                <version>26</version>
+                <artifactId>bom-${jenkins.baseline}.x</artifactId>
+                <version>4228.v0a_71308d905b_</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -50,7 +52,7 @@
 	</dependencies>
 
 	<scm>
-		<connection>scm:git:git://github.com/jenkinsci/createjobadvanced-plugin.git</connection>
+		<connection>scm:git:https://github.com/jenkinsci/createjobadvanced-plugin.git</connection>
 		<developerConnection>scm:git:git@github.com:jenkinsci/createjobadvanced-plugin.git</developerConnection>
 		<url>https://github.com/jenkinsci/createjobadvanced-plugin</url>
 	  <tag>HEAD</tag>
