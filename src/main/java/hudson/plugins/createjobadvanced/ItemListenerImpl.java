@@ -38,7 +38,7 @@ public class ItemListenerImpl extends ItemListener {
 
     @DataBoundConstructor
     public ItemListenerImpl() {
-        if (Jenkins.getInstanceOrNull().getPlugin("maven-plugin") != null) {
+        if (null != Jenkins.getInstanceOrNull().getPlugin("maven-plugin")) {
             mavenConfigurer = new MavenConfigurer();
         }
     }
@@ -69,6 +69,10 @@ public class ItemListenerImpl extends ItemListener {
         final AbstractItem abstractItem = (AbstractItem) item;
 
         CreateJobAdvancedPlugin cja = getPlugin();
+        if (cja == null) {
+            log.warning("CreateJobAdvancedPlugin is null");
+            return;
+        }
 
         if (cja.isReplaceSpace()) {
             renameJob(abstractItem);
