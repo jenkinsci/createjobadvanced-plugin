@@ -4,152 +4,146 @@ import hudson.Plugin;
 import hudson.model.Descriptor.FormException;
 import hudson.security.Permission;
 import hudson.security.PermissionGroup;
-
+import jakarta.servlet.ServletException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import jakarta.servlet.ServletException;
-
+import java.util.stream.Collectors;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-
-import org.kohsuke.stapler.StaplerRequest2;
-
 import org.apache.commons.lang.StringUtils;
-import java.util.stream.Collectors;
+import org.kohsuke.stapler.StaplerRequest2;
 
 /**
  * @author Bertrand Gressier
- * 
+ *
  */
-
 public class CreateJobAdvancedPlugin extends Plugin {
 
-	private static final Logger log = Logger.getLogger(CreateJobAdvancedPlugin.class.getName());
+    private static final Logger log = Logger.getLogger(CreateJobAdvancedPlugin.class.getName());
 
-	private boolean autoOwnerRights;
-	private boolean autoPublicBrowse;
-	private boolean replaceSpace;
+    private boolean autoOwnerRights;
+    private boolean autoPublicBrowse;
+    private boolean replaceSpace;
 
-	private boolean activeLogRotator;
-	private int daysToKeep = -1;
-	private int numToKeep = -1;
-	private int artifactDaysToKeep = -1;
-	private int artifactNumToKeep = -1;
+    private boolean activeLogRotator;
+    private int daysToKeep = -1;
+    private int numToKeep = -1;
+    private int artifactDaysToKeep = -1;
+    private int artifactNumToKeep = -1;
 
-	private boolean activeDynamicPermissions;
-	private String extractPattern;
-	
-	private boolean mvnArchivingDisabled;
-	private boolean mvnPerModuleEmail;
+    private boolean activeDynamicPermissions;
+    private String extractPattern;
 
-	private List<DynamicPermissionConfig> dynamicPermissionConfigs = new ArrayList<DynamicPermissionConfig>();
+    private boolean mvnArchivingDisabled;
+    private boolean mvnPerModuleEmail;
 
-	/**
-	 * @return the dynamicPermissionConfigs
-	 */
-	public List<DynamicPermissionConfig> getDynamicPermissionConfigs() {
-		return dynamicPermissionConfigs;
-	}
+    private List<DynamicPermissionConfig> dynamicPermissionConfigs = new ArrayList<DynamicPermissionConfig>();
 
-	@Deprecated
-	public CreateJobAdvancedPlugin() {
-	}
+    /**
+     * @return the dynamicPermissionConfigs
+     */
+    public List<DynamicPermissionConfig> getDynamicPermissionConfigs() {
+        return dynamicPermissionConfigs;
+    }
 
-	@Override
-	public void start() throws Exception {
-		super.start();
-		log.info("Create job advanced plugin started ...");
-		load();
-	}
+    @Deprecated
+    public CreateJobAdvancedPlugin() {}
 
-	@Override
-	public void configure(StaplerRequest2 req, JSONObject formData) throws IOException, ServletException, FormException {
+    @Override
+    public void start() throws Exception {
+        super.start();
+        log.info("Create job advanced plugin started ...");
+        load();
+    }
 
-		autoOwnerRights = formData.optBoolean("security", false);
-		autoPublicBrowse = formData.optBoolean("public", false);
-		replaceSpace = formData.optBoolean("jobspacesinname", false);
-		
-		mvnArchivingDisabled = formData.optBoolean("mvnArchivingDisabled", false);
-		mvnPerModuleEmail = formData.optBoolean("mvnPerModuleEmail", false);
+    @Override
+    public void configure(StaplerRequest2 req, JSONObject formData)
+            throws IOException, ServletException, FormException {
 
-		final JSONObject activeLogRotatorJson = formData.optJSONObject("activeLogRotator");
+        autoOwnerRights = formData.optBoolean("security", false);
+        autoPublicBrowse = formData.optBoolean("public", false);
+        replaceSpace = formData.optBoolean("jobspacesinname", false);
 
-		if (activeLogRotatorJson != null) {
-		    activeLogRotator = true;
-				daysToKeep = activeLogRotatorJson.optInt("daysToKeep", -1);
-				numToKeep = activeLogRotatorJson.optInt("numToKeep", -1);
-				artifactDaysToKeep = activeLogRotatorJson.optInt("artifactDaysToKeep", -1);
-				artifactNumToKeep = activeLogRotatorJson.optInt("artifactNumToKeep", -1);
-		}else{
-		    activeLogRotator = false;
-		}
+        mvnArchivingDisabled = formData.optBoolean("mvnArchivingDisabled", false);
+        mvnPerModuleEmail = formData.optBoolean("mvnPerModuleEmail", false);
 
-		final JSONObject activeDynamicPermissionsJson = formData.optJSONObject("activeDynamicPermissions");
+        final JSONObject activeLogRotatorJson = formData.optJSONObject("activeLogRotator");
 
-		if (activeDynamicPermissionsJson != null) {
-		    activeDynamicPermissions = true;
-		    extractPattern = activeDynamicPermissionsJson.optString("extractPattern", "");
+        if (activeLogRotatorJson != null) {
+            activeLogRotator = true;
+            daysToKeep = activeLogRotatorJson.optInt("daysToKeep", -1);
+            numToKeep = activeLogRotatorJson.optInt("numToKeep", -1);
+            artifactDaysToKeep = activeLogRotatorJson.optInt("artifactDaysToKeep", -1);
+            artifactNumToKeep = activeLogRotatorJson.optInt("artifactNumToKeep", -1);
+        } else {
+            activeLogRotator = false;
+        }
 
-			dynamicPermissionConfigs.clear();
-			final Object cfgs = activeDynamicPermissionsJson.get("cfgs");
-			if (cfgs instanceof JSONArray) {
-				final JSONArray jsonArray = (JSONArray) cfgs;
-				for (Object object : jsonArray) {
-					addDynamicPermission(req, (JSONObject) object);
-				}
-			} else {
-				// there might be only one single dynamic permission
-				addDynamicPermission(req, (JSONObject) cfgs);
-			}
+        final JSONObject activeDynamicPermissionsJson = formData.optJSONObject("activeDynamicPermissions");
 
-		}else{
-		    activeDynamicPermissions = false;
-		    extractPattern = null;
-		    dynamicPermissionConfigs.clear();
-		}
+        if (activeDynamicPermissionsJson != null) {
+            activeDynamicPermissions = true;
+            extractPattern = activeDynamicPermissionsJson.optString("extractPattern", "");
 
-		save();
-	}
-	
-	/**
-	 * adds a dynamic permission configuration with the data extracted form the
-	 * jsonObject.
-	 * 
-	 */
-	private void addDynamicPermission(StaplerRequest2 req, JSONObject jsonObject) {
-		final DynamicPermissionConfig dynPerm = req.bindJSON(DynamicPermissionConfig.class, jsonObject);
+            dynamicPermissionConfigs.clear();
+            final Object cfgs = activeDynamicPermissionsJson.get("cfgs");
+            if (cfgs instanceof JSONArray) {
+                final JSONArray jsonArray = (JSONArray) cfgs;
+                for (Object object : jsonArray) {
+                    addDynamicPermission(req, (JSONObject) object);
+                }
+            } else {
+                // there might be only one single dynamic permission
+                addDynamicPermission(req, (JSONObject) cfgs);
+            }
 
-		// add the enabled permission ids
-		final Map<String,List<Permission>> allPossiblePermissions = getAllPossiblePermissions();
-		for (String group: allPossiblePermissions.keySet()) {
-			for (Permission permission : allPossiblePermissions.get(group)) {
-				final String enabled = jsonObject.getString(permission.getId());
-				if (Boolean.valueOf(enabled)) {
-					dynPerm.addPermissionId(permission.getId());
-					log.log(Level.FINE, "enable {0}", new String[] { permission.getId() });
-				}
-			}
-		}
+        } else {
+            activeDynamicPermissions = false;
+            extractPattern = null;
+            dynamicPermissionConfigs.clear();
+        }
 
-		dynamicPermissionConfigs.add(dynPerm);
-	}
+        save();
+    }
 
-	public static Map<String,List<Permission>> getAllPossiblePermissions() {
-		final Map<String,List<Permission>> enabledPerms = new TreeMap<String,List<Permission>>();
+    /**
+     * adds a dynamic permission configuration with the data extracted form the
+     * jsonObject.
+     *
+     */
+    private void addDynamicPermission(StaplerRequest2 req, JSONObject jsonObject) {
+        final DynamicPermissionConfig dynPerm = req.bindJSON(DynamicPermissionConfig.class, jsonObject);
 
-		addEnabledPermissionsForGroup(enabledPerms, hudson.model.Item.class);
-		addEnabledPermissionsForGroup(enabledPerms, hudson.model.Run.class);
+        // add the enabled permission ids
+        final Map<String, List<Permission>> allPossiblePermissions = getAllPossiblePermissions();
+        for (String group : allPossiblePermissions.keySet()) {
+            for (Permission permission : allPossiblePermissions.get(group)) {
+                final String enabled = jsonObject.getString(permission.getId());
+                if (Boolean.valueOf(enabled)) {
+                    dynPerm.addPermissionId(permission.getId());
+                    log.log(Level.FINE, "enable {0}", new String[] {permission.getId()});
+                }
+            }
+        }
 
-		return enabledPerms;
-	}
+        dynamicPermissionConfigs.add(dynPerm);
+    }
 
-	public static String impliedByList(Permission p) {
+    public static Map<String, List<Permission>> getAllPossiblePermissions() {
+        final Map<String, List<Permission>> enabledPerms = new TreeMap<String, List<Permission>>();
+
+        addEnabledPermissionsForGroup(enabledPerms, hudson.model.Item.class);
+        addEnabledPermissionsForGroup(enabledPerms, hudson.model.Run.class);
+
+        return enabledPerms;
+    }
+
+    public static String impliedByList(Permission p) {
         List<Permission> impliedBys = new ArrayList<>();
         while (p.impliedBy != null) {
             p = p.impliedBy;
@@ -158,74 +152,74 @@ public class CreateJobAdvancedPlugin extends Plugin {
         return StringUtils.join(impliedBys.stream().map(Permission::getId).collect(Collectors.toList()), " ");
     }
 
-	private static void addEnabledPermissionsForGroup(final Map<String,List<Permission>> allEnabledPerms, Class<?> owner) {
-		final PermissionGroup permissionGroup = PermissionGroup.get(owner);
-		if(permissionGroup != null){
-	  		final List<Permission> enabledPerms = new ArrayList<Permission>();
-		    List<Permission> permissions = permissionGroup.getPermissions();
-    		for (Permission permission : permissions) {
-    			if (permission.enabled) {                  	
-    				enabledPerms.add(permission);
-    			}
-    		}
-			if(enabledPerms.size()>0) {
-				allEnabledPerms.put(permissionGroup.title.toString(),enabledPerms);
-			}
-		}
-	}
-
-	public boolean isAutoOwnerRights() {
-		return autoOwnerRights;
-	}
-
-	public boolean isAutoPublicBrowse() {
-		return autoPublicBrowse;
-	}
-
-	public boolean isReplaceSpace() {
-		return replaceSpace;
-	}
-
-	public boolean isActiveLogRotator() {
-		return activeLogRotator;
-	}
-
-	public int getDaysToKeep() {
-		return daysToKeep;
-	}
-
-	public int getNumToKeep() {
-		return numToKeep;
-	}
-
-	public int getArtifactDaysToKeep() {
-		return artifactDaysToKeep;
-	}
-
-	public int getArtifactNumToKeep() {
-		return artifactNumToKeep;
-	}
-
-	/**
-	 * @return the extractPattern
-	 */
-	public String getExtractPattern() {
-		return extractPattern;
-	}
-
-	/**
-	 * @return the activeDynamicPermissions
-	 */
-	public boolean isActiveDynamicPermissions() {
-		return activeDynamicPermissions;
-	}
-	
-	public boolean isMvnArchivingDisabled() {
-	    return mvnArchivingDisabled;
+    private static void addEnabledPermissionsForGroup(
+            final Map<String, List<Permission>> allEnabledPerms, Class<?> owner) {
+        final PermissionGroup permissionGroup = PermissionGroup.get(owner);
+        if (permissionGroup != null) {
+            final List<Permission> enabledPerms = new ArrayList<Permission>();
+            List<Permission> permissions = permissionGroup.getPermissions();
+            for (Permission permission : permissions) {
+                if (permission.enabled) {
+                    enabledPerms.add(permission);
+                }
+            }
+            if (enabledPerms.size() > 0) {
+                allEnabledPerms.put(permissionGroup.title.toString(), enabledPerms);
+            }
+        }
     }
-	
-	public boolean isMvnPerModuleEmail() {
+
+    public boolean isAutoOwnerRights() {
+        return autoOwnerRights;
+    }
+
+    public boolean isAutoPublicBrowse() {
+        return autoPublicBrowse;
+    }
+
+    public boolean isReplaceSpace() {
+        return replaceSpace;
+    }
+
+    public boolean isActiveLogRotator() {
+        return activeLogRotator;
+    }
+
+    public int getDaysToKeep() {
+        return daysToKeep;
+    }
+
+    public int getNumToKeep() {
+        return numToKeep;
+    }
+
+    public int getArtifactDaysToKeep() {
+        return artifactDaysToKeep;
+    }
+
+    public int getArtifactNumToKeep() {
+        return artifactNumToKeep;
+    }
+
+    /**
+     * @return the extractPattern
+     */
+    public String getExtractPattern() {
+        return extractPattern;
+    }
+
+    /**
+     * @return the activeDynamicPermissions
+     */
+    public boolean isActiveDynamicPermissions() {
+        return activeDynamicPermissions;
+    }
+
+    public boolean isMvnArchivingDisabled() {
+        return mvnArchivingDisabled;
+    }
+
+    public boolean isMvnPerModuleEmail() {
         return mvnPerModuleEmail;
     }
-
 }
