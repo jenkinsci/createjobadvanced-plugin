@@ -235,12 +235,15 @@ public class ItemListenerImpl extends ItemListener {
 
     private void addAuthorizationMatrixProperty(
             AbstractFolder<?> folder, Map<Permission, Set<PermissionEntry>> permissions) throws IOException {
+        Jenkins instance = Jenkins.getInstanceOrNull();
+        if (instance == null) {
+            return;
+        }
+
         com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty.DescriptorImpl propDescriptor =
                 (com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty.DescriptorImpl)
-                        Jenkins.getInstanceOrNull()
-                                .getDescriptor(
-                                        com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty
-                                                .class);
+                        instance.getDescriptor(
+                                com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty.class);
 
         com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty authProperty =
                 propDescriptor.create();
