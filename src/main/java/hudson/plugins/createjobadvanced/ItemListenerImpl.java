@@ -238,6 +238,7 @@ public class ItemListenerImpl extends ItemListener {
             AbstractFolder<?> folder, Map<Permission, Set<PermissionEntry>> permissions) throws IOException {
         Jenkins instance = Jenkins.getInstanceOrNull();
         if (instance == null) {
+            log.warning("Jenkins instance is null");
             return;
         }
 
@@ -245,13 +246,17 @@ public class ItemListenerImpl extends ItemListener {
                 (com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty.DescriptorImpl)
                         instance.getDescriptor(
                                 com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty.class);
+
         if (propDescriptor == null) {
+            log.warning("AuthorizationMatrixProperty.DescriptorImpl is null");
             return;
         }
+
         com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty authProperty =
                 propDescriptor.create();
-        for (Permission perm : permissions.keySet()) {
-            for (PermissionEntry permEntry : permissions.get(perm)) {
+        for (Map.Entry<Permission, Set<PermissionEntry>> entry : permissions.entrySet()) {
+            Permission perm = entry.getKey();
+            for (PermissionEntry permEntry : entry.getValue()) {
                 authProperty.add(perm, permEntry);
             }
         }
