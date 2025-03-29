@@ -4,3 +4,4 @@ work
 .project
 .settings
 *.iml
+.vscode/settings.json

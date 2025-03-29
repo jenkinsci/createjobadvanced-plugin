@@ -7,7 +7,7 @@
 This plugin extends creating job.  
 When you create a job, it automatically adds all permissions for the creator in the [Matrix Authorization Strategy Plugin](https://plugins.jenkins.io/matrix-auth/).
 
-![](docs/images/createjobadvanced.jpg)
+![](docs/images/createjobadvanced.png)
 
 # Release Notes
 
