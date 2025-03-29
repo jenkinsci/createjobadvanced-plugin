@@ -38,7 +38,8 @@ public class ItemListenerImpl extends ItemListener {
 
     @DataBoundConstructor
     public ItemListenerImpl() {
-        if (null != Jenkins.getInstanceOrNull().getPlugin("maven-plugin")) {
+        if (null != Jenkins.getInstanceOrNull()
+                && null != Jenkins.getInstanceOrNull().getPlugin("maven-plugin")) {
             mavenConfigurer = new MavenConfigurer();
         }
     }
