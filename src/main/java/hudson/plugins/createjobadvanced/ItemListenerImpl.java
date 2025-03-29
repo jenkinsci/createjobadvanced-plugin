@@ -80,28 +80,29 @@ public class ItemListenerImpl extends ItemListener {
         }
 
         // hudson must activate security mode for using
-        if (!Hudson.getInstanceOrNull().getSecurity().equals(SecurityMode.UNSECURED)) {
+        Jenkins jenkinsInstance = Hudson.getInstanceOrNull();
+        if (jenkinsInstance == null
+                || jenkinsInstance.getSecurity() == null
+                || jenkinsInstance.getSecurity().equals(SecurityMode.UNSECURED)) {
+            return;
+        }
 
-            if (cja.isAutoOwnerRights()) {
-                String sid = Hudson.getAuthentication2().getName();
-                securityGrantPermissions(
-                        abstractItem,
-                        sid,
-                        new Permission[] {Item.CONFIGURE, Item.BUILD, Item.READ, Item.DELETE, Item.WORKSPACE},
-                        AuthorizationType.USER);
-            }
+        if (cja.isAutoOwnerRights()) {
+            String sid = Hudson.getAuthentication2().getName();
+            securityGrantPermissions(
+                    abstractItem,
+                    sid,
+                    new Permission[] {Item.CONFIGURE, Item.BUILD, Item.READ, Item.DELETE, Item.WORKSPACE},
+                    AuthorizationType.USER);
+        }
 
-            if (cja.isAutoPublicBrowse()) {
-                securityGrantPermissions(
-                        abstractItem,
-                        "anonymous",
-                        new Permission[] {Item.READ, Item.WORKSPACE},
-                        AuthorizationType.USER);
-            }
+        if (cja.isAutoPublicBrowse()) {
+            securityGrantPermissions(
+                    abstractItem, "anonymous", new Permission[] {Item.READ, Item.WORKSPACE}, AuthorizationType.USER);
+        }
 
-            if (cja.isActiveDynamicPermissions()) {
-                securityGrantDynamicPermissions(abstractItem, cja);
-            }
+        if (cja.isActiveDynamicPermissions()) {
+            securityGrantDynamicPermissions(abstractItem, cja);
         }
 
         if (cja.isActiveLogRotator() && item instanceof Job) {
