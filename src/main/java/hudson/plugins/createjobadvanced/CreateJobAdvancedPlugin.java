@@ -121,8 +121,8 @@ public class CreateJobAdvancedPlugin extends Plugin {
 
         // add the enabled permission ids
         final Map<String, List<Permission>> allPossiblePermissions = getAllPossiblePermissions();
-        for (String group : allPossiblePermissions.keySet()) {
-            for (Permission permission : allPossiblePermissions.get(group)) {
+        for(Map.Entry<String, List<Permission>> entry : allPossiblePermissions.entrySet()) {
+            for (Permission permission : entry.getValue()) {
                 final String enabled = jsonObject.getString(permission.getId());
                 if (Boolean.valueOf(enabled)) {
                     dynPerm.addPermissionId(permission.getId());

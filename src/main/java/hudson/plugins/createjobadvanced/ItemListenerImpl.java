@@ -38,8 +38,9 @@ public class ItemListenerImpl extends ItemListener {
 
     @DataBoundConstructor
     public ItemListenerImpl() {
-        if (Jenkins.getInstanceOrNull().getPlugin("maven-plugin") != null) {
-            mavenConfigurer = new MavenConfigurer();
+        Jenkins instance = Jenkins.getInstanceOrNull();
+        if (instance != null && instance.getPlugin("maven-plugin") != null) {
+                mavenConfigurer = new MavenConfigurer();
         }
     }
 
@@ -57,7 +58,12 @@ public class ItemListenerImpl extends ItemListener {
     }
 
     private CreateJobAdvancedPlugin getPlugin() {
-        return Hudson.getInstanceOrNull().getPlugin(CreateJobAdvancedPlugin.class);
+        CreateJobAdvancedPlugin result = null;
+        Jenkins instance = Jenkins.getInstanceOrNull();
+        if(instance != null) {
+            result = instance.getPlugin(CreateJobAdvancedPlugin.class);
+        }
+        return result;
     }
 
     @Override
@@ -75,28 +81,32 @@ public class ItemListenerImpl extends ItemListener {
         }
 
         // hudson must activate security mode for using
-        if (!Hudson.getInstanceOrNull().getSecurity().equals(SecurityMode.UNSECURED)) {
-
-            if (cja.isAutoOwnerRights()) {
-                String sid = Hudson.getAuthentication2().getName();
-                securityGrantPermissions(
-                        abstractItem,
-                        sid,
-                        new Permission[] {Item.CONFIGURE, Item.BUILD, Item.READ, Item.DELETE, Item.WORKSPACE},
-                        AuthorizationType.USER);
+        Jenkins instance = Jenkins.getInstanceOrNull();
+        if(instance != null) {
+            SecurityMode security = instance.getSecurity();
+            if(security != null && !security.equals(SecurityMode.UNSECURED)) {
+                if (cja.isAutoOwnerRights()) {
+                    String sid = Hudson.getAuthentication2().getName();
+                    securityGrantPermissions(
+                            abstractItem,
+                            sid,
+                            new Permission[] {Item.CONFIGURE, Item.BUILD, Item.READ, Item.DELETE, Item.WORKSPACE},
+                            AuthorizationType.USER);
+                }
+        
+                if (cja.isAutoPublicBrowse()) {
+                    securityGrantPermissions(
+                            abstractItem,
+                            "anonymous",
+                            new Permission[] {Item.READ, Item.WORKSPACE},
+                            AuthorizationType.USER);
+                }
+        
+                if (cja.isActiveDynamicPermissions()) {
+                    securityGrantDynamicPermissions(abstractItem, cja);
+                }
             }
 
-            if (cja.isAutoPublicBrowse()) {
-                securityGrantPermissions(
-                        abstractItem,
-                        "anonymous",
-                        new Permission[] {Item.READ, Item.WORKSPACE},
-                        AuthorizationType.USER);
-            }
-
-            if (cja.isActiveDynamicPermissions()) {
-                securityGrantDynamicPermissions(abstractItem, cja);
-            }
         }
 
         if (cja.isActiveLogRotator() && item instanceof Job) {
@@ -230,21 +240,26 @@ public class ItemListenerImpl extends ItemListener {
 
     private void addAuthorizationMatrixProperty(
             AbstractFolder<?> folder, Map<Permission, Set<PermissionEntry>> permissions) throws IOException {
-        com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty.DescriptorImpl propDescriptor =
-                (com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty.DescriptorImpl)
-                        Jenkins.getInstanceOrNull()
-                                .getDescriptor(
-                                        com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty
-                                                .class);
-
-        com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty authProperty =
-                propDescriptor.create();
-        for (Permission perm : permissions.keySet()) {
-            for (PermissionEntry permEntry : permissions.get(perm)) {
-                authProperty.add(perm, permEntry);
+        Jenkins instance = Jenkins.getInstanceOrNull();
+        if(instance != null) {
+            com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty.DescriptorImpl propDescriptor =
+                (com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty.DescriptorImpl)                        
+                    instance.getDescriptor(
+                   com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty.class
+                    );
+            if(propDescriptor != null && folder != null) {
+                com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty authProperty =
+                    propDescriptor.create();
+                if(authProperty != null) {
+                    for(Map.Entry<Permission, Set<PermissionEntry>> permission : permissions.entrySet()) {
+                        for (PermissionEntry permEntry : permission.getValue()) {
+                            authProperty.add(permission.getKey(), permEntry);
+                        }
+                    }
+                    folder.addProperty(authProperty);
+                }
             }
         }
-        folder.addProperty(authProperty);
     }
 
     private Map<Permission, Set<PermissionEntry>> initPermissions(final AbstractItem abstractItem) {
