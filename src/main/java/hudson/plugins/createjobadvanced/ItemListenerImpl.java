@@ -52,8 +52,13 @@ public class ItemListenerImpl extends ItemListener {
         }
     }
 
-    private CreateJobAdvancedPlugin getPlugin() {
-        return Hudson.getInstanceOrNull().getPlugin(CreateJobAdvancedPlugin.class);
+   private CreateJobAdvancedPlugin getPlugin() {
+        Hudson hudsonInstance = Hudson.getInstanceOrNull();
+        if (hudsonInstance == null) {
+            log.warning("Hudson instance is null");
+            return null;
+        }
+        return hudsonInstance.getPlugin(CreateJobAdvancedPlugin.class);
     }
 
     @Override
