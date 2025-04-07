@@ -5,3 +5,6 @@ work
 .settings
 *.iml
 .vscode/settings.json
+.m2repository
+.vscode-server
+

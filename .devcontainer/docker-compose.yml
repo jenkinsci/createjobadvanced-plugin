@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  devcontainer:
+    image: jenkins-plugin-dev
+    build: 
+      context: .
+      dockerfile: Dockerfile    
+    volumes:
+      - ../..:/workspaces:cached
+      - ../.vscode-server:/root/.vscode-server:cached
+    command: sleep infinity
