@@ -1,15 +1,15 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
 {
-	"name": "Ubuntu",
+	"name": "Jenkins CI",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
     "dockerComposeFile": "docker-compose.yml",
-    "service": "devcontainer",
+    "service": "jenkinsci",
     "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 	"containerEnv" : {
 		"WORKSPACE_FOLDER": "${localWorkspaceFolderBasename}"
-	}
-
+	},
+	
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
 
@@ -23,5 +23,5 @@
 	// "customizations": {},
 
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "root"
+	"remoteUser": "jenkinsci"
 }
