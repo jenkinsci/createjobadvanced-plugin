@@ -9,7 +9,7 @@ services:
       dockerfile: Dockerfile      
       args:
         BASE_IMAGE: ${BASE_IMAGE:-ubuntu}
-        MAVEN_BINARY: ${MAVEN_BINARY:-https://dlcdn.apache.org/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz}
+        M2_BIN: ${M2_BIN:-https://dlcdn.apache.org/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz}
         USER_CI: ${USER_CI:-jenkinsci}
     environment:
       JENKINS_CI_REPO: ${JENKINS_CI_REPO:-https://repo.jenkins-ci.org/public/}
