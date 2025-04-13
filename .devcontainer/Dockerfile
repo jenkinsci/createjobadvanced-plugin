@@ -1,6 +1,6 @@
 ARG BASE_IMAGE=ubuntu
 FROM ${BASE_IMAGE}
-ARG MAVEN_BINARIES=https://dlcdn.apache.org/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz
+ARG MAVEN_BINARY=https://dlcdn.apache.org/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz
 ARG USER_CI=jenkinsci
 # Install required plugin development package
 RUN \
@@ -8,7 +8,7 @@ RUN \
 # Add maven,
 RUN \
   mkdir -p /opt/maven && \
-  curl -sSLf ${MAVEN_BINARIES} | tar -C /opt/maven --strip-components=1 -xzvf -
+  curl -sSLf ${MAVEN_BINARY} | tar -C /opt/maven --strip-components=1 -xzvf -
 # Append binary to PATH
 ENV PATH=/opt/maven/bin:${PATH}
 # Create CI USer
