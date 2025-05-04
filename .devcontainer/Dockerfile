@@ -1,18 +1,25 @@
 ARG BASE_IMAGE=ubuntu
 FROM ${BASE_IMAGE}
-ARG MAVEN_BINARIES=https://dlcdn.apache.org/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz
+ARG M2_BIN=https://dlcdn.apache.org/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz
 ARG USER_CI=jenkinsci
+ARG USER_UID
+ARG USER_GID
 # Install required plugin development package
 RUN \
   apt-get update && apt-get install -y git openjdk-21-jdk-headless sudo curl
 # Add maven,
 RUN \
   mkdir -p /opt/maven && \
-  curl -sSLf ${MAVEN_BINARIES} | tar -C /opt/maven --strip-components=1 -xzvf -
+  curl -sSLf ${M2_BIN} | tar -C /opt/maven --strip-components=1 -xzvf -
 # Append binary to PATH
 ENV PATH=/opt/maven/bin:${PATH}
 # Create CI USer
-RUN groupadd -r ${USER_CI} && useradd -rm -s /bin/bash -g ${USER_CI} ${USER_CI}
+RUN <<EOT
+# Remove existing user if any
+id ${USER_UID} && userdel -rf $(id -nu ${USER_UID})
+groupadd -fg ${USER_GID} ${USER_CI} && 
+    useradd -ms /bin/bash -g ${USER_GID} -u ${USER_UID} ${USER_CI}
+EOT
 # Turn it sudoer
 COPY <<EOT /etc/sudoers.d/${USER_CI}
 ${USER_CI} ALL=(root) NOPASSWD:ALL
