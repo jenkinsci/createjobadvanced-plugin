@@ -9,7 +9,14 @@
 	"containerEnv" : {
 		"WORKSPACE_FOLDER": "${localWorkspaceFolderBasename}"
 	},
-	
+	"initializeCommand": {
+		"uid": [
+			"bash", "-c", "sed -i -E \"s|^(LOCAL_UID=).*|\\1$(id -u)|g\" ${localWorkspaceFolder}/.devcontainer/.env"
+		],
+		"gid": [
+			"bash", "-c", "sed -i -E \"s|^(LOCAL_GID=).*|\\1$(id -g)|g\" ${localWorkspaceFolder}/.devcontainer/.env"
+		]
+	}
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
 
@@ -23,5 +30,5 @@
 	// "customizations": {},
 
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	"remoteUser": "jenkinsci"
+	//"remoteUser": "jenkinsci"
 }

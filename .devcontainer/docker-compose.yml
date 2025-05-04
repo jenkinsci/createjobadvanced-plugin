@@ -11,10 +11,13 @@ services:
         BASE_IMAGE: ${BASE_IMAGE:-ubuntu}
         M2_BIN: ${M2_BIN:-https://dlcdn.apache.org/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz}
         USER_CI: ${USER_CI:-jenkinsci}
+        USER_UID: ${LOCAL_UID}
+        USER_GID: ${LOCAL_GID}
     environment:
       JENKINS_CI_REPO: ${JENKINS_CI_REPO:-https://repo.jenkins-ci.org/public/}
     volumes:
       - ../..:/workspaces:cached
       # vscode customization persistance
-      - ../.vscode-server:/home/${USER_CI}/.vscode-server:cached
+      # - ../.vscode-server:/home/${USER_CI}/.vscode-server:cached
+    
     command: sleep infinity
