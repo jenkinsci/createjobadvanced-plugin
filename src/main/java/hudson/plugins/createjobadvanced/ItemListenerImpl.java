@@ -49,7 +49,7 @@ public class ItemListenerImpl extends ItemListener {
     public void onRenamed(Item item, String oldName, String newName) {
         log.finer("> ItemListenerImpl.onRenamed()");
 
-        for (AbstractConfigurer<?,?> configurer : configurers) {
+        for (AbstractConfigurer<?, ?> configurer : configurers) {
             log.finer("> " + configurer.getClass().getName() + ".onRenamed()");
             configurer.onRenamed(item);
             log.finer("< " + configurer.getClass().getName() + ".onRenamed()");
@@ -62,7 +62,7 @@ public class ItemListenerImpl extends ItemListener {
     public void onCreated(Item item) {
         log.finer("> ItemListenerImpl.onCreated()");
 
-        for (AbstractConfigurer<?,?> configurer : configurers) {
+        for (AbstractConfigurer<?, ?> configurer : configurers) {
             log.finer("> " + configurer.getClass().getName() + ".onCreated()");
             configurer.onCreated(item);
             log.finer("< " + configurer.getClass().getName() + ".onCreated()");

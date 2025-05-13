@@ -17,7 +17,6 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import jenkins.model.Jenkins;
-
 import org.jenkinsci.plugins.matrixauth.AuthorizationProperty;
 import org.jenkinsci.plugins.matrixauth.AuthorizationPropertyDescriptor;
 import org.jenkinsci.plugins.matrixauth.AuthorizationType;
@@ -33,7 +32,7 @@ public abstract class AbstractConfigurer<T extends AbstractItem, A extends Autho
             return;
         }
         log.finest("> AbstractConfigurer.onCreated()");
-        
+
         onRenamed(item);
 
         // hudson must activate security mode for using
@@ -70,7 +69,7 @@ public abstract class AbstractConfigurer<T extends AbstractItem, A extends Autho
         final CreateJobAdvancedPlugin cja = getPlugin();
         if (null == cja) {
             return;
-        }        
+        }
         log.finest("> AbstractConfigurer.onRenamed()");
         if (cja.isReplaceSpace()) {
             if (item.getName().indexOf(" ") != -1) {
@@ -189,12 +188,14 @@ public abstract class AbstractConfigurer<T extends AbstractItem, A extends Autho
 
     protected final void addAuthorizationMatrixProperty(Item item, Map<Permission, Set<PermissionEntry>> permissions)
             throws IOException {
-        log.finer("> " + this.getClass().getName() + ".addAuthorizationMatrixProperty(Item, Map<Permission, Set<PermissionEntry>>)");
+        log.finer("> " + this.getClass().getName()
+                + ".addAuthorizationMatrixProperty(Item, Map<Permission, Set<PermissionEntry>>)");
 
         AuthorizationPropertyDescriptor<?> propDescriptor = getAuthorizationPropertyDescriptor();
 
-        if (propDescriptor == null) {            
-            log.finer("< " + this.getClass().getName() + ".addAuthorizationMatrixProperty(Item, Map<Permission, Set<PermissionEntry>>)");
+        if (propDescriptor == null) {
+            log.finer("< " + this.getClass().getName()
+                    + ".addAuthorizationMatrixProperty(Item, Map<Permission, Set<PermissionEntry>>)");
             return;
         }
         A authProperty = createAuthorizationMatrixProperty(propDescriptor);
@@ -202,23 +203,24 @@ public abstract class AbstractConfigurer<T extends AbstractItem, A extends Autho
         for (Map.Entry<Permission, Set<PermissionEntry>> entry : permissions.entrySet()) {
             Permission perm = entry.getKey();
             for (PermissionEntry permEntry : entry.getValue()) {
-                if(null != perm && null != permEntry && propDescriptor.showPermission(perm)) {
+                if (null != perm && null != permEntry && propDescriptor.showPermission(perm)) {
                     authProperty.add(perm, permEntry);
                 } else {
-                    if(null!=perm) {
+                    if (null != perm) {
                         log.finer(": " + this.getClass().getName() + "skip hidden permissions " + perm.name);
                     }
-                    if(null==perm) {
-                        log.finer(": " + this.getClass().getName() + "skip null permission");   
+                    if (null == perm) {
+                        log.finer(": " + this.getClass().getName() + "skip null permission");
                     }
-                    if(null==permEntry) {
-                        log.finer(": " + this.getClass().getName() + "skip null permission entry");   
+                    if (null == permEntry) {
+                        log.finer(": " + this.getClass().getName() + "skip null permission entry");
                     }
                 }
             }
         }
         addAuthorizationMatrixProperty(item, authProperty);
-        log.finer("< " + this.getClass().getName() + ".addAuthorizationMatrixProperty(Item, Map<Permission, Set<PermissionEntry>>)");
+        log.finer("< " + this.getClass().getName()
+                + ".addAuthorizationMatrixProperty(Item, Map<Permission, Set<PermissionEntry>>)");
     }
 
     protected abstract void addAuthorizationMatrixProperty(Item item, A authProperty) throws IOException;
@@ -228,7 +230,7 @@ public abstract class AbstractConfigurer<T extends AbstractItem, A extends Autho
     protected abstract void renameJob(Item item, String newName) throws IOException;
 
     /*protected abstract void addAuthorizationMatrixProperty(Item item, Map<Permission, Set<PermissionEntry>> permissions)
-            throws IOException;*/
+    throws IOException;*/
     protected abstract A createAuthorizationMatrixProperty(AuthorizationPropertyDescriptor<?> desc);
 
     protected abstract A getAuthorizationMatrixProperty(Item item);

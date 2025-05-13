@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import jenkins.model.Jenkins;
-
 import org.jenkinsci.plugins.matrixauth.AuthorizationPropertyDescriptor;
 import org.jenkinsci.plugins.matrixauth.PermissionEntry;
 
@@ -72,29 +71,34 @@ public class FolderConfigurer extends AbstractConfigurer<AbstractFolder<?>, Auth
 
     @Override
     protected AuthorizationPropertyDescriptor<?> getAuthorizationPropertyDescriptor() {
-        AuthorizationPropertyDescriptor<?> result = (AuthorizationPropertyDescriptor<?>)(Jenkins.get().getDescriptor(AuthorizationMatrixProperty.class));
-        if(result==null) {
-            log.warning(AuthorizationMatrixProperty.DescriptorImpl.class.getName()+" is null");
+        AuthorizationPropertyDescriptor<?> result =
+                (AuthorizationPropertyDescriptor<?>) (Jenkins.get().getDescriptor(AuthorizationMatrixProperty.class));
+        if (result == null) {
+            log.warning(AuthorizationMatrixProperty.DescriptorImpl.class.getName() + " is null");
         }
         return result;
     }
 
     @Override
-    protected void addAuthorizationMatrixProperty(Item item, AuthorizationMatrixProperty authProperty) throws IOException {
-        log.finer("> " + this.getClass().getName() + ".addAuthorizationMatrixProperty(Item, AuthorizationMatrixProperty)");
+    protected void addAuthorizationMatrixProperty(Item item, AuthorizationMatrixProperty authProperty)
+            throws IOException {
+        log.finer("> " + this.getClass().getName()
+                + ".addAuthorizationMatrixProperty(Item, AuthorizationMatrixProperty)");
         if (!(item instanceof AbstractFolder<?>)) {
             log.warning("JobConfigurer.onCreated() non applicable for "
                     + item.getClass().getName());
-            log.finer("< " + this.getClass().getName() + ".addAuthorizationMatrixProperty(Item, AuthorizationMatrixProperty)");
+            log.finer("< " + this.getClass().getName()
+                    + ".addAuthorizationMatrixProperty(Item, AuthorizationMatrixProperty)");
             return;
         }
         AbstractFolder<?> folder = (AbstractFolder<?>) item;
         folder.addProperty(authProperty);
-        log.finer("< " + this.getClass().getName() + ".addAuthorizationMatrixProperty(Item, AuthorizationMatrixProperty)");
+        log.finer("< " + this.getClass().getName()
+                + ".addAuthorizationMatrixProperty(Item, AuthorizationMatrixProperty)");
     }
 
     @Override
     protected AuthorizationMatrixProperty createAuthorizationMatrixProperty(AuthorizationPropertyDescriptor<?> desc) {
-        return (AuthorizationMatrixProperty)desc.create();
+        return (AuthorizationMatrixProperty) desc.create();
     }
 }

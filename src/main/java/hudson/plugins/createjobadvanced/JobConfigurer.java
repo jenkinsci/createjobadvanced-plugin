@@ -5,18 +5,16 @@ import hudson.model.Job;
 import hudson.security.AuthorizationMatrixProperty;
 import hudson.security.Permission;
 import hudson.tasks.LogRotator;
-import jenkins.model.Jenkins;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
-
+import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.matrixauth.AuthorizationPropertyDescriptor;
 import org.jenkinsci.plugins.matrixauth.PermissionEntry;
 
-public class JobConfigurer extends AbstractConfigurer<Job<?,?>,AuthorizationMatrixProperty> {
+public class JobConfigurer extends AbstractConfigurer<Job<?, ?>, AuthorizationMatrixProperty> {
 
     protected JobConfigurer() {}
 
@@ -37,13 +35,13 @@ public class JobConfigurer extends AbstractConfigurer<Job<?,?>,AuthorizationMatr
             if (null == cja) {
                 return;
             }
-            log.finer("> "+this.getClass().getName()+".onCreated()");
+            log.finer("> " + this.getClass().getName() + ".onCreated()");
             super.onCreated(item);
             Job<?, ?> job = (Job<?, ?>) item;
             if (cja.isActiveLogRotator()) {
                 activateLogRotator(job, cja);
             }
-            log.finer("< "+this.getClass().getName()+".onCreated()");
+            log.finer("< " + this.getClass().getName() + ".onCreated()");
         }
     }
 
@@ -106,9 +104,10 @@ public class JobConfigurer extends AbstractConfigurer<Job<?,?>,AuthorizationMatr
 
     @Override
     protected AuthorizationPropertyDescriptor<?> getAuthorizationPropertyDescriptor() {
-        AuthorizationPropertyDescriptor<?> result = (AuthorizationPropertyDescriptor<?>)(Jenkins.get().getDescriptor(AuthorizationMatrixProperty.class));
-        if(result==null) {
-            log.warning(AuthorizationMatrixProperty.DescriptorImpl.class.getName()+" is null");
+        AuthorizationPropertyDescriptor<?> result =
+                (AuthorizationPropertyDescriptor<?>) (Jenkins.get().getDescriptor(AuthorizationMatrixProperty.class));
+        if (result == null) {
+            log.warning(AuthorizationMatrixProperty.DescriptorImpl.class.getName() + " is null");
         }
         return result;
     }
@@ -116,20 +115,22 @@ public class JobConfigurer extends AbstractConfigurer<Job<?,?>,AuthorizationMatr
     @Override
     protected void addAuthorizationMatrixProperty(Item item, AuthorizationMatrixProperty authProperty)
             throws IOException {
-        log.finer("> " + this.getClass().getName() + ".addAuthorizationMatrixProperty(Item, AuthorizationMatrixProperty)");
+        log.finer("> " + this.getClass().getName()
+                + ".addAuthorizationMatrixProperty(Item, AuthorizationMatrixProperty)");
         if (!(item instanceof Job<?, ?>)) {
-            log.warning("JobConfigurer.onCreated() non applicable for " 
-                + item.getClass().getName());
-            log.finer("< " + this.getClass().getName() + ".addAuthorizationMatrixProperty()");            
+            log.warning("JobConfigurer.onCreated() non applicable for "
+                    + item.getClass().getName());
+            log.finer("< " + this.getClass().getName() + ".addAuthorizationMatrixProperty()");
             return;
         }
         Job<?, ?> job = (Job<?, ?>) item;
         job.addProperty(authProperty);
-        log.finer("< " + this.getClass().getName() + ".addAuthorizationMatrixProperty(Item, AuthorizationMatrixProperty)");        
+        log.finer("< " + this.getClass().getName()
+                + ".addAuthorizationMatrixProperty(Item, AuthorizationMatrixProperty)");
     }
 
     @Override
     protected AuthorizationMatrixProperty createAuthorizationMatrixProperty(AuthorizationPropertyDescriptor<?> desc) {
-        return (AuthorizationMatrixProperty)desc.create();
+        return (AuthorizationMatrixProperty) desc.create();
     }
 }

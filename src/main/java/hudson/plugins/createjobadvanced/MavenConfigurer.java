@@ -52,7 +52,7 @@ public class MavenConfigurer extends JobConfigurer {
         if (null == cja) {
             return;
         }
-        log.finer("> "+this.getClass().getName()+".preConfigureMavenJob(MavenModuleSet)");            
+        log.finer("> " + this.getClass().getName() + ".preConfigureMavenJob(MavenModuleSet)");
         mavenModuleSet.setIsArchivingDisabled(cja.isMvnArchivingDisabled());
         MavenMailer m = mavenModuleSet.getReporters().get(MavenMailer.class);
         if (m != null) {
@@ -60,6 +60,6 @@ public class MavenConfigurer extends JobConfigurer {
         } else {
             mavenModuleSet.getReporters().add(new MavenMailer(null, true, false, cja.isMvnPerModuleEmail()));
         }
-        log.finer("< "+this.getClass().getName()+".preConfigureMavenJob(MavenModuleSet)");            
+        log.finer("< " + this.getClass().getName() + ".preConfigureMavenJob(MavenModuleSet)");
     }
 }
