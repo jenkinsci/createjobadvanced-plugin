@@ -25,35 +25,41 @@ package hudson.plugins.createjobadvanced;
 
 import hudson.maven.MavenModuleSet;
 import hudson.maven.reporters.MavenMailer;
-import hudson.model.Job;
-import jenkins.model.Jenkins;
+import hudson.model.Item;
 
 /**
  * Changes the configuration of {@link MavenModuleSet}s.
  *
  * @author Dominik Bartholdi (imod)
  */
-public class MavenConfigurer {
+public class MavenConfigurer extends JobConfigurer {
 
-    public MavenConfigurer() {}
+    protected MavenConfigurer() {}
 
-    public void onCreated(Job<?, ?> job) {
-        if (job instanceof MavenModuleSet) {
-            preConfigureMavenJob((MavenModuleSet) job);
+    @Override
+    public void onCreated(Item item) {
+        log.finer("> " + this.getClass().getName() + ".onCreated()");
+        super.onCreated(item);
+        if ((item instanceof MavenModuleSet)) {
+            MavenModuleSet mavenModuleSet = (MavenModuleSet) item;
+            preConfigureMavenJob(mavenModuleSet);
         }
+        log.finer("< " + this.getClass().getName() + ".onCreated()");
     }
 
-    private void preConfigureMavenJob(MavenModuleSet job) {
-        final CreateJobAdvancedPlugin cja = Jenkins.get().getPlugin(CreateJobAdvancedPlugin.class);
-        if (cja == null) {
-            throw new IllegalStateException("Cannot retrieve instance of the Create Job Advanced Plugin");
+    private void preConfigureMavenJob(MavenModuleSet mavenModuleSet) {
+        final CreateJobAdvancedPlugin cja = getPlugin();
+        if (null == cja) {
+            return;
         }
-        job.setIsArchivingDisabled(cja.isMvnArchivingDisabled());
-        MavenMailer m = job.getReporters().get(MavenMailer.class);
+        log.finer("> " + this.getClass().getName() + ".preConfigureMavenJob(MavenModuleSet)");
+        mavenModuleSet.setIsArchivingDisabled(cja.isMvnArchivingDisabled());
+        MavenMailer m = mavenModuleSet.getReporters().get(MavenMailer.class);
         if (m != null) {
             m.perModuleEmail = cja.isMvnPerModuleEmail();
         } else {
-            job.getReporters().add(new MavenMailer(null, true, false, cja.isMvnPerModuleEmail()));
+            mavenModuleSet.getReporters().add(new MavenMailer(null, true, false, cja.isMvnPerModuleEmail()));
         }
+        log.finer("< " + this.getClass().getName() + ".preConfigureMavenJob(MavenModuleSet)");
     }
 }
