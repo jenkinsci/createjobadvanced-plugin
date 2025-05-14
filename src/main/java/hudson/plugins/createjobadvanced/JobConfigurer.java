@@ -11,8 +11,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.matrixauth.AuthorizationPropertyDescriptor;
 import org.jenkinsci.plugins.matrixauth.PermissionEntry;
+import org.jenkinsci.plugins.matrixauth.inheritance.InheritanceStrategy;
 
 public class JobConfigurer extends AbstractConfigurer<Job<?, ?>, AuthorizationMatrixProperty> {
 
@@ -102,10 +102,9 @@ public class JobConfigurer extends AbstractConfigurer<Job<?, ?>, AuthorizationMa
         }
     }
 
-    @Override
-    protected AuthorizationPropertyDescriptor<?> getAuthorizationPropertyDescriptor() {
-        AuthorizationPropertyDescriptor<?> result =
-                (AuthorizationPropertyDescriptor<?>) (Jenkins.get().getDescriptor(AuthorizationMatrixProperty.class));
+    private final AuthorizationMatrixProperty.DescriptorImpl getAuthorizationPropertyDescriptor() {
+        AuthorizationMatrixProperty.DescriptorImpl result = (AuthorizationMatrixProperty.DescriptorImpl)
+                (Jenkins.get().getDescriptor(AuthorizationMatrixProperty.class));
         if (result == null) {
             log.warning(AuthorizationMatrixProperty.DescriptorImpl.class.getName() + " is null");
         }
@@ -130,7 +129,36 @@ public class JobConfigurer extends AbstractConfigurer<Job<?, ?>, AuthorizationMa
     }
 
     @Override
-    protected AuthorizationMatrixProperty createAuthorizationMatrixProperty(AuthorizationPropertyDescriptor<?> desc) {
-        return (AuthorizationMatrixProperty) desc.create();
+    protected AuthorizationMatrixProperty createAuthorizationMatrixProperty() {
+        AuthorizationMatrixProperty.DescriptorImpl propDescriptor = getAuthorizationPropertyDescriptor();
+        if (propDescriptor == null) {
+            log.finer("< " + this.getClass().getName()
+                    + ".addAuthorizationMatrixProperty(Item, Map<Permission, Set<PermissionEntry>>)");
+            return null;
+        }
+
+        return propDescriptor.create();
+    }
+
+    @Override
+    protected void setInheritanceStrategy(
+            AuthorizationMatrixProperty authProperty, InheritanceStrategy inheritanceStrategy) {
+        authProperty.setInheritanceStrategy(inheritanceStrategy);
+    }
+
+    @Override
+    protected void addPermission(AuthorizationMatrixProperty authProperty, Permission perm, PermissionEntry permEntry) {
+        authProperty.add(perm, permEntry);
+    }
+
+    @Override
+    protected boolean showPermission(Permission perm) {
+        AuthorizationMatrixProperty.DescriptorImpl propDescriptor = getAuthorizationPropertyDescriptor();
+        if (propDescriptor == null) {
+            log.finer("< " + this.getClass().getName()
+                    + ".addAuthorizationMatrixProperty(Item, Map<Permission, Set<PermissionEntry>>)");
+            return false;
+        }
+        return propDescriptor.showPermission(perm);
     }
 }

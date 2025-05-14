@@ -17,13 +17,12 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.matrixauth.AuthorizationProperty;
-import org.jenkinsci.plugins.matrixauth.AuthorizationPropertyDescriptor;
 import org.jenkinsci.plugins.matrixauth.AuthorizationType;
 import org.jenkinsci.plugins.matrixauth.PermissionEntry;
 import org.jenkinsci.plugins.matrixauth.inheritance.InheritParentStrategy;
+import org.jenkinsci.plugins.matrixauth.inheritance.InheritanceStrategy;
 
-public abstract class AbstractConfigurer<T extends AbstractItem, A extends AuthorizationProperty> {
+public abstract class AbstractConfigurer<T extends AbstractItem, A> {
     protected static final Logger log = Logger.getLogger(CreateJobAdvancedPlugin.class.getName());
 
     protected void onCreated(Item item) {
@@ -191,25 +190,17 @@ public abstract class AbstractConfigurer<T extends AbstractItem, A extends Autho
         log.finer("> " + this.getClass().getName()
                 + ".addAuthorizationMatrixProperty(Item, Map<Permission, Set<PermissionEntry>>)");
 
-        AuthorizationPropertyDescriptor<?> propDescriptor = getAuthorizationPropertyDescriptor();
-
-        if (propDescriptor == null) {
-            log.finer("< " + this.getClass().getName()
-                    + ".addAuthorizationMatrixProperty(Item, Map<Permission, Set<PermissionEntry>>)");
-            return;
-        }
-        A authProperty = createAuthorizationMatrixProperty(propDescriptor);
-        authProperty.setInheritanceStrategy(new InheritParentStrategy());
+        A authProperty = createAuthorizationMatrixProperty();
+        setInheritanceStrategy(authProperty, new InheritParentStrategy());
         for (Map.Entry<Permission, Set<PermissionEntry>> entry : permissions.entrySet()) {
             Permission perm = entry.getKey();
             for (PermissionEntry permEntry : entry.getValue()) {
-                if (null != perm && null != permEntry && propDescriptor.showPermission(perm)) {
-                    authProperty.add(perm, permEntry);
+                if (null != perm && null != permEntry && showPermission(perm)) {
+                    addPermission(authProperty, perm, permEntry);
                 } else {
                     if (null != perm) {
                         log.finer(": " + this.getClass().getName() + "skip hidden permissions " + perm.name);
-                    }
-                    if (null == perm) {
+                    } else {
                         log.finer(": " + this.getClass().getName() + "skip null permission");
                     }
                     if (null == permEntry) {
@@ -223,15 +214,19 @@ public abstract class AbstractConfigurer<T extends AbstractItem, A extends Autho
                 + ".addAuthorizationMatrixProperty(Item, Map<Permission, Set<PermissionEntry>>)");
     }
 
-    protected abstract void addAuthorizationMatrixProperty(Item item, A authProperty) throws IOException;
+    protected abstract void setInheritanceStrategy(A authProperty, InheritanceStrategy inheritanceStrategy);
 
-    protected abstract AuthorizationPropertyDescriptor<?> getAuthorizationPropertyDescriptor();
+    protected abstract void addPermission(A authProperty, Permission perm, PermissionEntry permEntry);
+
+    protected abstract boolean showPermission(Permission perm);
+
+    protected abstract void addAuthorizationMatrixProperty(Item item, A authProperty) throws IOException;
 
     protected abstract void renameJob(Item item, String newName) throws IOException;
 
     /*protected abstract void addAuthorizationMatrixProperty(Item item, Map<Permission, Set<PermissionEntry>> permissions)
     throws IOException;*/
-    protected abstract A createAuthorizationMatrixProperty(AuthorizationPropertyDescriptor<?> desc);
+    protected abstract A createAuthorizationMatrixProperty();
 
     protected abstract A getAuthorizationMatrixProperty(Item item);
 
