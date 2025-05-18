@@ -18,6 +18,11 @@ public class DynamicPermissionConfig {
         }
     }
 
+    /**
+     * Add given permission ID to checked permission set.
+     *
+     * @param permissionId permission ID to be added to checked permission IDs set.
+     */
     public void addPermissionId(String permissionId) {
         checkedPermissionIds.add(permissionId);
     }
@@ -30,12 +35,18 @@ public class DynamicPermissionConfig {
     }
 
     /**
-     * @return the checkedPermissionIds
+     * @return the checked permission IDs set
      */
     public Set<String> getCheckedPermissionIds() {
         return checkedPermissionIds;
     }
 
+    /**
+     * Check given permission state.
+     *
+     * @param permission
+     * @return true if given permission is checked, false otherwise
+     */
     public boolean isPermissionChecked(Permission permission) {
         return checkedPermissionIds.contains(permission.getId());
     }
