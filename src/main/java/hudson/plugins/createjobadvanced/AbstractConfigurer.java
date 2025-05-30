@@ -1,5 +1,7 @@
 package hudson.plugins.createjobadvanced;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.model.AbstractItem;
 import hudson.model.Hudson;
 import hudson.model.Item;
@@ -17,22 +19,37 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.matrixauth.AuthorizationType;
 import org.jenkinsci.plugins.matrixauth.PermissionEntry;
 import org.jenkinsci.plugins.matrixauth.inheritance.InheritParentStrategy;
 import org.jenkinsci.plugins.matrixauth.inheritance.InheritanceStrategy;
 
+/**
+ * Partial default implementation of item configurers.
+ * <P>
+ * Used to apply plugin configuration to items
+ *
+ * @author Laurent Coltat
+ */
 public abstract class AbstractConfigurer<T extends AbstractItem, A> {
+
+    /**
+     * Plugin logger
+     */
     protected static final Logger log = Logger.getLogger(CreateJobAdvancedPlugin.class.getName());
 
-    protected void onCreated(Item item) {
+    /**
+     * Update given Item according to plugin configuration.
+     *
+     * @param item item to be updated
+     */
+    protected void doCreate(Item item) {
         final CreateJobAdvancedPlugin cja = getPlugin();
         if (null == cja) {
             return;
         }
         log.finest("> AbstractConfigurer.onCreated()");
 
-        onRenamed(item);
+        doRename(item);
 
         // hudson must activate security mode for using
         Jenkins jenkinsInstance = Hudson.getInstanceOrNull();
@@ -46,16 +63,14 @@ public abstract class AbstractConfigurer<T extends AbstractItem, A> {
 
         if (cja.isAutoOwnerRights()) {
             String sid = Hudson.getAuthentication2().getName();
-            securityGrantPermissions(
-                    item,
-                    sid,
-                    new Permission[] {Item.CONFIGURE, Item.BUILD, Item.READ, Item.DELETE, Item.WORKSPACE},
-                    AuthorizationType.USER);
+            securityGrantPermissions(item, PermissionEntry.user(sid), new Permission[] {
+                Item.CONFIGURE, Item.BUILD, Item.READ, Item.DELETE, Item.WORKSPACE
+            });
         }
 
         if (cja.isAutoPublicBrowse()) {
             securityGrantPermissions(
-                    item, "anonymous", new Permission[] {Item.READ, Item.WORKSPACE}, AuthorizationType.USER);
+                    item, PermissionEntry.user("anonymous"), new Permission[] {Item.READ, Item.WORKSPACE});
         }
 
         if (cja.isActiveDynamicPermissions()) {
@@ -64,24 +79,30 @@ public abstract class AbstractConfigurer<T extends AbstractItem, A> {
         log.finest("< AbstractConfigurer.onCreated()");
     }
 
-    protected final void onRenamed(Item item) {
+    /**
+     * Rename given item if plugin configuration request it.
+     *
+     * @param item to be renamed
+     */
+    protected final String doRename(Item item) {
+        String resulString = item.getName();
         final CreateJobAdvancedPlugin cja = getPlugin();
-        if (null == cja) {
-            return;
-        }
-        log.finest("> AbstractConfigurer.onRenamed()");
-        if (cja.isReplaceSpace()) {
-            if (item.getName().indexOf(" ") != -1) {
+        if (null != cja && cja.isReplaceSpace()) {
+            if (item.getName().contains(" ")) {
                 try {
-                    renameJob(item, item.getName().replaceAll(" ", "-"));
+                    resulString = item.getName().replaceAll(" ", "-");
+                    renameJob(item, resulString);
                 } catch (IOException e) {
                     log.log(Level.SEVERE, "error during rename", e);
                 }
             }
         }
-        log.finest("< AbstractConfigurer.onRenamed()");
+        return resulString;
     }
 
+    /**
+     * @return plugin configuration instance.identity/
+     */
     protected final CreateJobAdvancedPlugin getPlugin() {
         Jenkins instance = Jenkins.getInstanceOrNull();
         if (null == instance) {
@@ -95,21 +116,27 @@ public abstract class AbstractConfigurer<T extends AbstractItem, A> {
         return result;
     }
 
-    private final void securityGrantDynamicPermissions(final Item abstractItem, CreateJobAdvancedPlugin cja) {
+    /**
+     * Grant dynamic group permissions to given item according to plugin configuration.
+     *
+     * @param item item to be granted
+     * @param cja plugin configuration
+     */
+    private void securityGrantDynamicPermissions(final Item item, CreateJobAdvancedPlugin cja) {
         String patternStr = cja.getExtractPattern(); // com.([A-Z]{3}).(.*)
 
-        List<String> groupsList = new ArrayList<String>();
+        List<String> groupsList = new ArrayList<>();
 
         if (patternStr != null) {
             Pattern pattern = Pattern.compile(patternStr);
-            Matcher matcher = pattern.matcher(abstractItem.getName());
+            Matcher matcher = pattern.matcher(item.getName());
             boolean matchFound = matcher.find();
 
             if (matchFound) {
                 // Get all groups for this match
                 for (int i = 0; i <= matcher.groupCount(); i++) {
                     String groupStr = matcher.group(i);
-                    log.fine("groupStr: " + groupStr);
+                    log.log(Level.FINE, "groupStr: {0}", groupStr);
                     groupsList.add(groupStr);
                 }
             }
@@ -117,50 +144,50 @@ public abstract class AbstractConfigurer<T extends AbstractItem, A> {
 
         for (DynamicPermissionConfig dpc : cja.getDynamicPermissionConfigs()) {
             MessageFormat format = new MessageFormat(dpc.getGroupFormat());
-            final String newName = format.format(groupsList.toArray(new String[0]));
-            log.finest("add perms for group: " + newName);
+            final String newName = format.format(groupsList.toArray(String[]::new));
+            log.log(Level.FINEST, "add perms for group: {0}", newName);
 
             final Set<String> permissions = dpc.getCheckedPermissionIds();
-            List<Permission> permissionList = new ArrayList<Permission>();
+            List<Permission> permissionList = new ArrayList<>();
             for (String id : permissions) {
                 final Permission permForId = Permission.fromId(id);
                 permissionList.add(permForId);
             }
 
             securityGrantPermissions(
-                    abstractItem,
-                    newName,
-                    (Permission[]) permissionList.toArray(new Permission[permissionList.size()]),
-                    AuthorizationType.GROUP);
+                    item, PermissionEntry.group(newName), (Permission[]) permissionList.toArray(Permission[]::new));
         }
     }
 
+    /**
+     * Grant given Jenkins permissions to given item for given sid of given type.
+     *
+     * @param item item to be granted
+     * @param permEnt Permission entry
+     * @param jenkinsPermissions permissions to grant
+     */
     protected final void securityGrantPermissions(
-            final Item item, String sid, Permission[] hudsonPermissions, AuthorizationType type) {
-        PermissionEntry permEnt = new PermissionEntry(AuthorizationType.EITHER, sid);
-        switch (type) {
-            case USER:
-                permEnt = PermissionEntry.user(sid);
-                break;
-            case GROUP:
-                permEnt = PermissionEntry.group(sid);
-                break;
-            case EITHER:
-                break;
-        }
+            final Item item, PermissionEntry permEnt, Permission[] jenkinsPermissions) {
 
         Map<Permission, Set<PermissionEntry>> permissions = initPermissions(item);
-        for (Permission perm : hudsonPermissions) {
+        for (Permission perm : jenkinsPermissions) {
             configurePermission(permissions, perm, permEnt);
         }
         try {
-            addAuthorizationMatrixProperty(item, permissions);
+            A authProperty = setupAuthorizationMatrixProperty(permissions);
+            addAuthorizationMatrixProperty(item, authProperty);
         } catch (IOException e) {
             log.log(Level.SEVERE, "problem to add granted permissions", e);
         }
     }
 
-    protected final Map<Permission, Set<PermissionEntry>> initPermissions(Item item) {
+    /**
+     * Retrive existing Jenkins permissions map granted to given item.
+     *
+     * @param item item to be parsed
+     * @return Jenkins permissions map granted to given item
+     */
+    protected final @NonNull Map<Permission, Set<PermissionEntry>> initPermissions(@Nullable Item item) {
         // if you create the job with template, need to get informations
         A auth = getAuthorizationMatrixProperty(item);
         Map<Permission, Set<PermissionEntry>> permissions = getGrantedPermissionEntries(auth);
@@ -169,26 +196,36 @@ public abstract class AbstractConfigurer<T extends AbstractItem, A> {
         return permissions;
     }
 
+    /**
+     * Associates given permission entry to given Jenkins permission, and add it to given permissions map.
+     *
+     * @param permissions map of Jenkins permissions linked to their assigned permission entries
+     * @param permission permission to be configured
+     * @param permissionEntry permission entry
+     */
     protected final void configurePermission(
-            Map<Permission, Set<PermissionEntry>> permissions, Permission permission, PermissionEntry sid) {
+            Map<Permission, Set<PermissionEntry>> permissions, Permission permission, PermissionEntry permissionEntry) {
 
-        Set<PermissionEntry> sidPermission = permissions.get(permission);
-        if (sidPermission == null) {
-            Set<PermissionEntry> sidSet = new HashSet<PermissionEntry>();
-
-            sidSet.add(sid);
+        Set<PermissionEntry> sidPermissionSet = permissions.get(permission);
+        if (sidPermissionSet == null) {
+            Set<PermissionEntry> sidSet = new HashSet<>();
+            sidSet.add(permissionEntry);
             permissions.put(permission, sidSet);
         } else {
-            if (!sidPermission.contains(sid)) {
-                sidPermission.add(sid);
+            if (!sidPermissionSet.contains(permissionEntry)) {
+                sidPermissionSet.add(permissionEntry);
             }
         }
     }
 
-    protected final void addAuthorizationMatrixProperty(Item item, Map<Permission, Set<PermissionEntry>> permissions)
+    /**
+     * Creates authorization matrix property from given permission map.
+     *
+     * @param permissions map of permissions linked to their assigned permissions entries
+     * @throws IOException
+     */
+    protected final A setupAuthorizationMatrixProperty(Map<Permission, Set<PermissionEntry>> permissions)
             throws IOException {
-        log.finer("> " + this.getClass().getName()
-                + ".addAuthorizationMatrixProperty(Item, Map<Permission, Set<PermissionEntry>>)");
 
         A authProperty = createAuthorizationMatrixProperty();
         setInheritanceStrategy(authProperty, new InheritParentStrategy());
@@ -199,38 +236,103 @@ public abstract class AbstractConfigurer<T extends AbstractItem, A> {
                     addPermission(authProperty, perm, permEntry);
                 } else {
                     if (null != perm) {
-                        log.finer(": " + this.getClass().getName() + "skip hidden permissions " + perm.name);
+                        log.log(Level.FINER, ": {0}skip hidden permissions {1}", new Object[] {
+                            this.getClass().getName(), perm.name
+                        });
                     } else {
-                        log.finer(": " + this.getClass().getName() + "skip null permission");
+                        log.log(
+                                Level.FINER,
+                                ": {0}skip null permission",
+                                this.getClass().getName());
                     }
                     if (null == permEntry) {
-                        log.finer(": " + this.getClass().getName() + "skip null permission entry");
+                        log.log(
+                                Level.FINER,
+                                ": {0}skip null permission entry",
+                                this.getClass().getName());
                     }
                 }
             }
         }
-        addAuthorizationMatrixProperty(item, authProperty);
-        log.finer("< " + this.getClass().getName()
-                + ".addAuthorizationMatrixProperty(Item, Map<Permission, Set<PermissionEntry>>)");
+
+        return authProperty;
     }
 
-    protected abstract void setInheritanceStrategy(A authProperty, InheritanceStrategy inheritanceStrategy);
+    /**
+     * Assign given inheritance strategy to given authorization matrix property.
+     *
+     * @param authProperty authorization matrix property to be updated
+     * @param inheritanceStrategy inheritance strategy to be assigned
+     */
+    protected abstract void setInheritanceStrategy(
+            @Nullable A authProperty, @Nullable InheritanceStrategy inheritanceStrategy);
 
-    protected abstract void addPermission(A authProperty, Permission perm, PermissionEntry permEntry);
+    /**
+     * Associate given Jenkins permission to given permission entry and assign it to given authorization property.
+     *
+     * @param authProperty authorization matrix property to be updated
+     * @param perm Jenkins permission to be assigned
+     * @param permEntry permission entry to be associated
+     */
+    protected abstract void addPermission(
+            @Nullable A authProperty, @Nullable Permission perm, @Nullable PermissionEntry permEntry);
 
-    protected abstract boolean showPermission(Permission perm);
+    /**
+     * Check if given Jenkins permission is handled by this object.
+     *
+     * @param perm Jenkins permission
+     * @return true if parameter is available
+     */
+    protected abstract boolean showPermission(@Nullable Permission perm);
 
-    protected abstract void addAuthorizationMatrixProperty(Item item, A authProperty) throws IOException;
+    /**
+     * Assigne given authorization matrix property to given item.
+     *
+     * @param item Item to be updated
+     * @param authProperty authorization matrix property to be assigned
+     * @throws IOException
+     */
+    protected abstract void addAuthorizationMatrixProperty(@Nullable Item item, @Nullable A authProperty)
+            throws IOException;
 
-    protected abstract void renameJob(Item item, String newName) throws IOException;
+    /**
+     * Rename given item with given name.
+     *
+     * @param item Item to be updated
+     * @param newName New name to be assigned
+     * @throws IOException
+     */
+    protected abstract void renameJob(@Nullable Item item, @Nullable String newName) throws IOException;
 
-    /*protected abstract void addAuthorizationMatrixProperty(Item item, Map<Permission, Set<PermissionEntry>> permissions)
-    throws IOException;*/
-    protected abstract A createAuthorizationMatrixProperty();
+    /**
+     * Create a fresh new authorization matrix property.
+     *
+     * @return created authorization matrix property
+     */
+    protected abstract @Nullable A createAuthorizationMatrixProperty();
 
-    protected abstract A getAuthorizationMatrixProperty(Item item);
+    /**
+     * Fetch autorization matrix property from given item.
+     *
+     * @param item owner of the autorization matrix property to be fetched
+     * @return autorization matrix property of given item if any, null otherwize
+     */
+    protected abstract @Nullable A getAuthorizationMatrixProperty(@Nullable Item item);
 
-    protected abstract boolean removeProperty(Item item, A authProperty);
+    /**
+     * Remove given authorization matrix from given item.
+     *
+     * @param item item to be updated
+     * @param authProperty authorization matrix to be removed
+     */
+    protected abstract void removeProperty(@Nullable Item item, @Nullable A authProperty);
 
-    protected abstract Map<Permission, Set<PermissionEntry>> getGrantedPermissionEntries(A authProperty);
+    /**
+     * Fetch association of Jenkins permissions to permission entries from given authorization matrix.auth.
+     *
+     * @param authProperty authorization matrix to be updated.
+     * @return a Map of Jenkins permissions linked to their assigned permissions entries.
+     */
+    protected abstract @NonNull Map<Permission, Set<PermissionEntry>> getGrantedPermissionEntries(
+            @Nullable A authProperty);
 }

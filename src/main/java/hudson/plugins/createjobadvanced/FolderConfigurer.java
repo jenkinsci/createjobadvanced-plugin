@@ -2,6 +2,7 @@ package hudson.plugins.createjobadvanced;
 
 import com.cloudbees.hudson.plugins.folder.AbstractFolder;
 import com.cloudbees.hudson.plugins.folder.properties.AuthorizationMatrixProperty;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.model.Item;
 import hudson.security.Permission;
 import java.io.IOException;
@@ -13,120 +14,121 @@ import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.matrixauth.PermissionEntry;
 import org.jenkinsci.plugins.matrixauth.inheritance.InheritanceStrategy;
 
-public class FolderConfigurer extends AbstractConfigurer<AbstractFolder<?>, AuthorizationMatrixProperty> {
+/**
+ * Changes the configuration of {@link AbstractFolder<?>} items.
+ *
+ * @author Laurent Coltat
+ */
+public final class FolderConfigurer extends AbstractConfigurer<AbstractFolder<?>, AuthorizationMatrixProperty> {
 
+    /**
+     * Class contructor
+     */
     protected FolderConfigurer() {}
 
     @Override
-    protected void onCreated(Item item) {
-        if ((item instanceof AbstractFolder<?>)) {
-            log.finer("> " + this.getClass().getName() + ".onCreated()");
-            super.onCreated(item);
-            log.finer("< " + this.getClass().getName() + ".onCreated()");
+    protected void doCreate(@Nullable Item item) {
+        if (null != item && item instanceof AbstractFolder<?>) {
+            super.doCreate(item);
         }
     }
 
     @Override
-    protected void renameJob(Item item, String newName) throws IOException {
-        if ((item instanceof AbstractFolder<?>)) {
-            log.finer("> " + this.getClass().getName() + ".renameJob()");
+    protected void renameJob(@Nullable Item item, @Nullable String newName) throws IOException {
+        if (null != item && null != newName && item instanceof AbstractFolder<?>) {
             AbstractFolder<?> folder = (AbstractFolder<?>) item;
             folder.renameTo(newName);
-            log.finer("< " + this.getClass().getName() + ".renameJob()");
         }
     }
 
     @Override
     protected Map<Permission, Set<PermissionEntry>> getGrantedPermissionEntries(
-            AuthorizationMatrixProperty authProperty) {
-        log.finer("> " + this.getClass().getName() + ".getGrantedPermissionEntries()");
+            @Nullable AuthorizationMatrixProperty authProperty) {
+        Map<Permission, Set<PermissionEntry>> result;
+
         if (null == authProperty) {
-            return new HashMap<Permission, Set<PermissionEntry>>();
+            result = new HashMap<Permission, Set<PermissionEntry>>();
+        } else {
+            result = new HashMap<Permission, Set<PermissionEntry>>(authProperty.getGrantedPermissionEntries());
         }
-        log.finer("< " + this.getClass().getName() + ".addAuthorizationMatrixProperty()");
-        return new HashMap<Permission, Set<PermissionEntry>>(authProperty.getGrantedPermissionEntries());
+
+        return result;
     }
 
     @Override
-    protected AuthorizationMatrixProperty getAuthorizationMatrixProperty(Item item) {
-        if (!(item instanceof AbstractFolder<?>)) {
-            return null;
-        }
-        AbstractFolder<?> folder = (AbstractFolder<?>) item;
-        return folder.getProperties().get(AuthorizationMatrixProperty.class);
-    }
-
-    @Override
-    protected boolean removeProperty(Item item, AuthorizationMatrixProperty authProperty) {
-        if (!(item instanceof AbstractFolder<?>)) {
-            return false;
-        }
-        if (null == authProperty) {
-            return false;
-        }
-        AbstractFolder<?> folder = (AbstractFolder<?>) item;
-        List<?> folderProperties = folder.getProperties();
-        return folderProperties.remove(authProperty);
-    }
-
-    private final AuthorizationMatrixProperty.DescriptorImpl getAuthorizationPropertyDescriptor() {
-        AuthorizationMatrixProperty.DescriptorImpl result = (AuthorizationMatrixProperty.DescriptorImpl)
-                (Jenkins.get().getDescriptor(AuthorizationMatrixProperty.class));
-        if (result == null) {
-            log.warning(AuthorizationMatrixProperty.DescriptorImpl.class.getName() + " is null");
+    @Nullable
+    protected AuthorizationMatrixProperty getAuthorizationMatrixProperty(@Nullable Item item) {
+        AuthorizationMatrixProperty result = null;
+        if (null != item && item instanceof AbstractFolder<?>) {
+            AbstractFolder<?> folder = (AbstractFolder<?>) item;
+            result = folder.getProperties().get(AuthorizationMatrixProperty.class);
         }
         return result;
     }
 
     @Override
-    protected void addAuthorizationMatrixProperty(Item item, AuthorizationMatrixProperty authProperty)
-            throws IOException {
-        log.finer("> " + this.getClass().getName()
-                + ".addAuthorizationMatrixProperty(Item, AuthorizationMatrixProperty)");
-        if (!(item instanceof AbstractFolder<?>)) {
-            log.warning("JobConfigurer.onCreated() non applicable for "
-                    + item.getClass().getName());
-            log.finer("< " + this.getClass().getName()
-                    + ".addAuthorizationMatrixProperty(Item, AuthorizationMatrixProperty)");
-            return;
+    protected void removeProperty(@Nullable Item item, @Nullable AuthorizationMatrixProperty authProperty) {
+        if (null != item && null != authProperty && item instanceof AbstractFolder<?>) {
+            AbstractFolder<?> folder = (AbstractFolder<?>) item;
+            List<?> folderProperties = folder.getProperties();
+            folderProperties.remove(authProperty);
         }
-        AbstractFolder<?> folder = (AbstractFolder<?>) item;
-        folder.addProperty(authProperty);
-        log.finer("< " + this.getClass().getName()
-                + ".addAuthorizationMatrixProperty(Item, AuthorizationMatrixProperty)");
+    }
+
+    @Nullable
+    private final AuthorizationMatrixProperty.DescriptorImpl getAuthorizationPropertyDescriptor() {
+        AuthorizationMatrixProperty.DescriptorImpl result = (AuthorizationMatrixProperty.DescriptorImpl)
+                (Jenkins.get().getDescriptor(AuthorizationMatrixProperty.class));
+        return result;
     }
 
     @Override
+    protected void addAuthorizationMatrixProperty(
+            @Nullable Item item, @Nullable AuthorizationMatrixProperty authProperty) throws IOException {
+        if (null != item && null != authProperty && item instanceof AbstractFolder<?>) {
+            AbstractFolder<?> folder = (AbstractFolder<?>) item;
+            folder.addProperty(authProperty);
+        }
+    }
+
+    @Override
+    @Nullable
     protected AuthorizationMatrixProperty createAuthorizationMatrixProperty() {
+        AuthorizationMatrixProperty result = null;
+
         AuthorizationMatrixProperty.DescriptorImpl propDescriptor = getAuthorizationPropertyDescriptor();
-        if (propDescriptor == null) {
-            log.finer("< " + this.getClass().getName()
-                    + ".addAuthorizationMatrixProperty(Item, Map<Permission, Set<PermissionEntry>>)");
-            return null;
+        if (null != propDescriptor) {
+            result = propDescriptor.create();
         }
 
-        return propDescriptor.create();
+        return result;
     }
 
     @Override
     protected void setInheritanceStrategy(
-            AuthorizationMatrixProperty authProperty, InheritanceStrategy inheritanceStrategy) {
-        authProperty.setInheritanceStrategy(inheritanceStrategy);
-    }
-
-    @Override
-    protected void addPermission(AuthorizationMatrixProperty authProperty, Permission perm, PermissionEntry permEntry) {
-        authProperty.add(perm, permEntry);
-    }
-
-    @Override
-    protected boolean showPermission(Permission perm) {
-        AuthorizationMatrixProperty.DescriptorImpl propDescriptor = getAuthorizationPropertyDescriptor();
-        if (propDescriptor == null) {
-            log.finer("< " + this.getClass().getName()
-                    + ".addAuthorizationMatrixProperty(Item, Map<Permission, Set<PermissionEntry>>)");
-            return false;
+            @Nullable AuthorizationMatrixProperty authProperty, @Nullable InheritanceStrategy inheritanceStrategy) {
+        if (null != authProperty && null != inheritanceStrategy) {
+            authProperty.setInheritanceStrategy(inheritanceStrategy);
         }
-        return propDescriptor.showPermission(perm);
+    }
+
+    @Override
+    protected void addPermission(
+            @Nullable AuthorizationMatrixProperty authProperty,
+            @Nullable Permission perm,
+            @Nullable PermissionEntry permEntry) {
+        if (null != authProperty && null != perm && null != permEntry) {
+            authProperty.add(perm, permEntry);
+        }
+    }
+
+    @Override
+    protected boolean showPermission(@Nullable Permission perm) {
+        AuthorizationMatrixProperty.DescriptorImpl propDescriptor = getAuthorizationPropertyDescriptor();
+        boolean result = false;
+        if (null != propDescriptor && null != perm) {
+            result = propDescriptor.showPermission(perm);
+        }
+        return result;
     }
 }

@@ -115,6 +115,8 @@ public class CreateJobAdvancedPlugin extends Plugin {
      * adds a dynamic permission configuration with the data extracted form the
      * jsonObject.
      *
+     * @param req
+     * @param jsonObject
      */
     private void addDynamicPermission(StaplerRequest2 req, JSONObject jsonObject) {
         final DynamicPermissionConfig dynPerm = req.bindJSON(DynamicPermissionConfig.class, jsonObject);
@@ -134,6 +136,10 @@ public class CreateJobAdvancedPlugin extends Plugin {
         dynamicPermissionConfigs.add(dynPerm);
     }
 
+    /**
+     *
+     * @return
+     */
     public static Map<String, List<Permission>> getAllPossiblePermissions() {
         final Map<String, List<Permission>> enabledPerms = new TreeMap<String, List<Permission>>();
 
@@ -143,6 +149,11 @@ public class CreateJobAdvancedPlugin extends Plugin {
         return enabledPerms;
     }
 
+    /**
+     *
+     * @param p
+     * @return
+     */
     public static String impliedByList(Permission p) {
         List<Permission> impliedBys = new ArrayList<>();
         while (p.impliedBy != null) {
@@ -152,6 +163,11 @@ public class CreateJobAdvancedPlugin extends Plugin {
         return StringUtils.join(impliedBys.stream().map(Permission::getId).collect(Collectors.toList()), " ");
     }
 
+    /**
+     *
+     * @param allEnabledPerms
+     * @param owner
+     */
     private static void addEnabledPermissionsForGroup(
             final Map<String, List<Permission>> allEnabledPerms, Class<?> owner) {
         final PermissionGroup permissionGroup = PermissionGroup.get(owner);
@@ -169,34 +185,66 @@ public class CreateJobAdvancedPlugin extends Plugin {
         }
     }
 
+    /**
+     *
+     * @return true when automatic owner right assigment  option is activated
+     */
     public boolean isAutoOwnerRights() {
         return autoOwnerRights;
     }
 
+    /**
+     *
+     * @return true when automatic public browse assigment option is activated
+     */
     public boolean isAutoPublicBrowse() {
         return autoPublicBrowse;
     }
 
+    /**
+     *
+     * @return true when replace space option is activated
+     */
     public boolean isReplaceSpace() {
         return replaceSpace;
     }
 
+    /**
+     *
+     * @return true when log rotator option is activated
+     */
     public boolean isActiveLogRotator() {
         return activeLogRotator;
     }
 
+    /**
+     *
+     * @return the days to keep builds
+     */
     public int getDaysToKeep() {
         return daysToKeep;
     }
 
+    /**
+     *
+     * @return the number of build to be kept
+     */
     public int getNumToKeep() {
         return numToKeep;
     }
 
+    /**
+     *
+     * @return the days to keep build artifacts
+     */
     public int getArtifactDaysToKeep() {
         return artifactDaysToKeep;
     }
 
+    /**
+     *
+     * @return the number of build to keep with artifacts
+     */
     public int getArtifactNumToKeep() {
         return artifactNumToKeep;
     }
@@ -215,10 +263,18 @@ public class CreateJobAdvancedPlugin extends Plugin {
         return activeDynamicPermissions;
     }
 
+    /**
+     *
+     * @return
+     */
     public boolean isMvnArchivingDisabled() {
         return mvnArchivingDisabled;
     }
 
+    /**
+     *
+     * @return
+     */
     public boolean isMvnPerModuleEmail() {
         return mvnPerModuleEmail;
     }

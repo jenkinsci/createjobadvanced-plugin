@@ -1,5 +1,7 @@
 package hudson.plugins.createjobadvanced;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.model.Item;
 import hudson.model.Job;
 import hudson.security.AuthorizationMatrixProperty;
@@ -14,74 +16,95 @@ import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.matrixauth.PermissionEntry;
 import org.jenkinsci.plugins.matrixauth.inheritance.InheritanceStrategy;
 
+/**
+ * Changes the configuration of {@link Job<?,?>} items.
+ *
+ * @author Laurent Coltat
+ */
 public class JobConfigurer extends AbstractConfigurer<Job<?, ?>, AuthorizationMatrixProperty> {
 
     protected JobConfigurer() {}
 
     @Override
-    protected void renameJob(Item item, String newName) throws IOException {
-        if (!(item instanceof Job<?, ?>)) {
-            log.finer("> " + this.getClass().getName() + ".renameJob()");
+    protected final void renameJob(@Nullable Item item, @NonNull String newName) throws IOException {
+        if (null == newName) {
+            log.warning("newName parameter is null");
+            return;
+        }
+        if (item == null) {
+            log.warning("item parameter is null");
+            return;
+        }
+        if (item instanceof Job<?, ?>) {
             Job<?, ?> job = (Job<?, ?>) item;
             job.renameTo(newName);
-            log.finer("< " + this.getClass().getName() + ".renameJob()");
         }
     }
 
     @Override
-    protected void onCreated(Item item) {
+    protected void doCreate(Item item) {
         if ((item instanceof Job<?, ?>)) {
             final CreateJobAdvancedPlugin cja = getPlugin();
             if (null == cja) {
                 return;
             }
-            log.finer("> " + this.getClass().getName() + ".onCreated()");
-            super.onCreated(item);
+            super.doCreate(item);
             Job<?, ?> job = (Job<?, ?>) item;
             if (cja.isActiveLogRotator()) {
                 activateLogRotator(job, cja);
             }
-            log.finer("< " + this.getClass().getName() + ".onCreated()");
         }
     }
 
     @Override
-    protected AuthorizationMatrixProperty getAuthorizationMatrixProperty(Item item) {
-        if (!(item instanceof Job<?, ?>)) {
+    protected final @Nullable AuthorizationMatrixProperty getAuthorizationMatrixProperty(@Nullable Item item) {
+        if (null == item) {
+            log.warning("item parameter is null");
             return null;
         }
-        Job<?, ?> job = (Job<?, ?>) item;
-        return job.getProperty(AuthorizationMatrixProperty.class);
+        AuthorizationMatrixProperty result = null;
+        if (item instanceof Job<?, ?>) {
+            Job<?, ?> job = (Job<?, ?>) item;
+            result = job.getProperty(AuthorizationMatrixProperty.class);
+        }
+        return result;
     }
 
     @Override
-    protected boolean removeProperty(Item item, AuthorizationMatrixProperty authProperty) {
-        if (!(item instanceof Job<?, ?>)) {
-            return false;
+    protected final void removeProperty(@Nullable Item item, @Nullable AuthorizationMatrixProperty authProperty) {
+        if (null == item) {
+            log.warning("item parameter is null");
+            return;
         }
         if (null == authProperty) {
-            return false;
+            log.warning("authProperty parameter is null");
+            return;
         }
-        AuthorizationMatrixProperty result = null;
-        Job<?, ?> job = (Job<?, ?>) item;
-        try {
-            result = job.removeProperty(AuthorizationMatrixProperty.class);
-        } catch (IOException e) {
-            log.log(Level.SEVERE, "problem to remove granted permissions (template or copy job)", e);
+        if (item instanceof Job<?, ?>) {
+            Job<?, ?> job = (Job<?, ?>) item;
+            try {
+                job.removeProperty(AuthorizationMatrixProperty.class);
+            } catch (IOException e) {
+                log.log(Level.SEVERE, "problem to remove granted permissions (template or copy job)", e);
+            }
         }
-        return null != result;
     }
 
     @Override
-    protected Map<Permission, Set<PermissionEntry>> getGrantedPermissionEntries(
-            AuthorizationMatrixProperty authProperty) {
+    protected final Map<Permission, Set<PermissionEntry>> getGrantedPermissionEntries(
+            @Nullable AuthorizationMatrixProperty authProperty) {
         if (null == authProperty) {
             return new HashMap<Permission, Set<PermissionEntry>>();
         }
         return new HashMap<Permission, Set<PermissionEntry>>(authProperty.getGrantedPermissionEntries());
     }
 
-    private void activateLogRotator(final Item item, final CreateJobAdvancedPlugin cja) {
+    /**
+     *
+     * @param item
+     * @param cja
+     */
+    private final void activateLogRotator(final Item item, final CreateJobAdvancedPlugin cja) {
 
         if (!(item instanceof Job<?, ?>)) {
             return;
@@ -102,7 +125,11 @@ public class JobConfigurer extends AbstractConfigurer<Job<?, ?>, AuthorizationMa
         }
     }
 
-    private final AuthorizationMatrixProperty.DescriptorImpl getAuthorizationPropertyDescriptor() {
+    /**
+     *
+     * @return
+     */
+    private final @Nullable AuthorizationMatrixProperty.DescriptorImpl getAuthorizationPropertyDescriptor() {
         AuthorizationMatrixProperty.DescriptorImpl result = (AuthorizationMatrixProperty.DescriptorImpl)
                 (Jenkins.get().getDescriptor(AuthorizationMatrixProperty.class));
         if (result == null) {
@@ -112,16 +139,23 @@ public class JobConfigurer extends AbstractConfigurer<Job<?, ?>, AuthorizationMa
     }
 
     @Override
-    protected void addAuthorizationMatrixProperty(Item item, AuthorizationMatrixProperty authProperty)
-            throws IOException {
-        log.finer("> " + this.getClass().getName()
-                + ".addAuthorizationMatrixProperty(Item, AuthorizationMatrixProperty)");
+    protected final void addAuthorizationMatrixProperty(
+            @Nullable Item item, @Nullable AuthorizationMatrixProperty authProperty) throws IOException {
+        if (null == authProperty) {
+            log.warning("authProperty parameter is null");
+            return;
+        }
+        if (null == item) {
+            log.warning("item parameter is null");
+            return;
+        }
         if (!(item instanceof Job<?, ?>)) {
             log.warning("JobConfigurer.onCreated() non applicable for "
                     + item.getClass().getName());
-            log.finer("< " + this.getClass().getName() + ".addAuthorizationMatrixProperty()");
             return;
         }
+        log.finer("> " + this.getClass().getName()
+                + ".addAuthorizationMatrixProperty(Item, AuthorizationMatrixProperty)");
         Job<?, ?> job = (Job<?, ?>) item;
         job.addProperty(authProperty);
         log.finer("< " + this.getClass().getName()
@@ -129,36 +163,60 @@ public class JobConfigurer extends AbstractConfigurer<Job<?, ?>, AuthorizationMa
     }
 
     @Override
-    protected AuthorizationMatrixProperty createAuthorizationMatrixProperty() {
+    protected final @Nullable AuthorizationMatrixProperty createAuthorizationMatrixProperty() {
+        AuthorizationMatrixProperty result = null;
         AuthorizationMatrixProperty.DescriptorImpl propDescriptor = getAuthorizationPropertyDescriptor();
-        if (propDescriptor == null) {
-            log.finer("< " + this.getClass().getName()
-                    + ".addAuthorizationMatrixProperty(Item, Map<Permission, Set<PermissionEntry>>)");
-            return null;
+        if (propDescriptor != null) {
+            result = propDescriptor.create();
         }
-
-        return propDescriptor.create();
+        return result;
     }
 
     @Override
-    protected void setInheritanceStrategy(
-            AuthorizationMatrixProperty authProperty, InheritanceStrategy inheritanceStrategy) {
+    protected final void setInheritanceStrategy(
+            @Nullable AuthorizationMatrixProperty authProperty, @Nullable InheritanceStrategy inheritanceStrategy) {
+        if (null == inheritanceStrategy) {
+            log.warning("inheritanceStrategy parameter is null");
+            return;
+        }
+        if (null == authProperty) {
+            log.warning("authProperty parameter is null");
+            return;
+        }
         authProperty.setInheritanceStrategy(inheritanceStrategy);
     }
 
     @Override
-    protected void addPermission(AuthorizationMatrixProperty authProperty, Permission perm, PermissionEntry permEntry) {
+    protected final void addPermission(
+            @Nullable AuthorizationMatrixProperty authProperty,
+            @Nullable Permission perm,
+            @Nullable PermissionEntry permEntry) {
+        if (permEntry == null) {
+            log.warning("permEntry parameter is null");
+            return;
+        }
+        if (perm == null) {
+            log.warning("perm parameter is null");
+            return;
+        }
+        if (authProperty == null) {
+            log.warning("authProperty parameter is null");
+            return;
+        }
         authProperty.add(perm, permEntry);
     }
 
     @Override
-    protected boolean showPermission(Permission perm) {
-        AuthorizationMatrixProperty.DescriptorImpl propDescriptor = getAuthorizationPropertyDescriptor();
-        if (propDescriptor == null) {
-            log.finer("< " + this.getClass().getName()
-                    + ".addAuthorizationMatrixProperty(Item, Map<Permission, Set<PermissionEntry>>)");
+    protected final boolean showPermission(@Nullable Permission perm) {
+        if (perm == null) {
+            log.warning("perm parameter is null");
             return false;
         }
-        return propDescriptor.showPermission(perm);
+        boolean result = false;
+        AuthorizationMatrixProperty.DescriptorImpl propDescriptor = getAuthorizationPropertyDescriptor();
+        if (null != propDescriptor) {
+            result = propDescriptor.showPermission(perm);
+        }
+        return result;
     }
 }

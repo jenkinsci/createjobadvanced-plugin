@@ -5,69 +5,81 @@ import hudson.model.Item;
 import hudson.model.listeners.ItemListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
-import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.StaplerResponse2;
 
+/**
+ * Item listener in charge to apply plugin configuration on created or renamed items.
+ */
 @Extension
 public class ItemListenerImpl extends ItemListener {
-
+    /**
+     * Plugin logger
+     */
     private static final Logger log = Logger.getLogger(CreateJobAdvancedPlugin.class.getName());
 
-    private List<AbstractConfigurer<?, ?>> configurers = new ArrayList<AbstractConfigurer<?, ?>>();
+    /**
+     * Available Item configurers list
+     */
+    private final List<AbstractConfigurer<?, ?>> configurers = new ArrayList<>();
 
-    @DataBoundConstructor
+    /**
+     * Class constructor in charge to initialize item configurers according to available plugins.
+     */
     public ItemListenerImpl() {
-        log.finer("> ItemListenerImpl()");
         Jenkins instance = Jenkins.getInstanceOrNull();
         if (null != instance) {
             if (null != instance.getPlugin("maven-plugin")) {
-                log.finer("> ItemListenerImpl() registering MavenConfigurer");
                 MavenConfigurer mavenConfigurer = new MavenConfigurer();
                 log.finer(mavenConfigurer.toString());
                 configurers.add(mavenConfigurer);
-                log.finer("< ItemListenerImpl() registered MavenConfigurer");
             } else {
-                log.finer("> ItemListenerImpl() registering JobConfigurer");
                 JobConfigurer jobConfigurer = new JobConfigurer();
                 log.finer(jobConfigurer.toString());
                 configurers.add(jobConfigurer);
-                log.finer("< ItemListenerImpl() registered JobConfigurer");
             }
             if (null != instance.getPlugin("cloudbees-folder")) {
-                log.finer("> ItemListenerImpl() registering FolderConfigurer");
                 FolderConfigurer folderConfigurer = new FolderConfigurer();
                 log.finer(folderConfigurer.toString());
                 configurers.add(folderConfigurer);
-                log.finer("< ItemListenerImpl() registered FolderConfigurer");
             }
         }
-        log.finer("< ItemListenerImpl()");
     }
 
     @Override
     public void onRenamed(Item item, String oldName, String newName) {
-        log.finer("> ItemListenerImpl.onRenamed()");
-
+        final Object[] params = {oldName, newName};
+        log.entering(getClass().getSimpleName(), "onRenamed", params);
         for (AbstractConfigurer<?, ?> configurer : configurers) {
-            log.finer("> " + configurer.getClass().getName() + ".onRenamed()");
-            configurer.onRenamed(item);
-            log.finer("< " + configurer.getClass().getName() + ".onRenamed()");
+            boolean isRespCommitted = false;
+            try {
+                String name = configurer.doRename(item);
+                if (newName.compareTo(name) != 0) {
+                    StaplerResponse2 rsp = Stapler.getCurrentResponse2();
+                    if (null != rsp) {
+                        isRespCommitted = rsp.isCommitted();
+                        rsp.sendRedirect2("../" + name);
+                    }
+                }
+            } catch (java.lang.IllegalStateException e) {
+                log.log(Level.FINEST, "resp.isCommitted()={0}", isRespCommitted);
+                if (false == isRespCommitted) {
+                    log.log(Level.SEVERE, "error during sendRedirect2", e);
+                }
+            } catch (java.io.IOException e) {
+                log.log(Level.SEVERE, "error during sendRedirect2", e);
+            }
         }
-
-        log.finer("< ItemListenerImpl.onRenamed()");
+        log.exiting(getClass().getSimpleName(), "onRenamed");
     }
 
     @Override
     public void onCreated(Item item) {
-        log.finer("> ItemListenerImpl.onCreated()");
-
         for (AbstractConfigurer<?, ?> configurer : configurers) {
-            log.finer("> " + configurer.getClass().getName() + ".onCreated()");
-            configurer.onCreated(item);
-            log.finer("< " + configurer.getClass().getName() + ".onCreated()");
+            configurer.doCreate(item);
         }
-
-        log.finer("< ItemListenerImpl.onCreated()");
     }
 }

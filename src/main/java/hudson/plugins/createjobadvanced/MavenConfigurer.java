@@ -23,23 +23,28 @@
  */
 package hudson.plugins.createjobadvanced;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.maven.MavenModuleSet;
 import hudson.maven.reporters.MavenMailer;
 import hudson.model.Item;
 
 /**
- * Changes the configuration of {@link MavenModuleSet}s.
+ * Changes the configuration of {@link MavenModuleSet} items.
  *
  * @author Dominik Bartholdi (imod)
+ * @author Laurent Coltat
  */
-public class MavenConfigurer extends JobConfigurer {
+public final class MavenConfigurer extends JobConfigurer {
 
+    /**
+     * Class constructor
+     */
     protected MavenConfigurer() {}
 
     @Override
-    public void onCreated(Item item) {
+    public final void doCreate(Item item) {
         log.finer("> " + this.getClass().getName() + ".onCreated()");
-        super.onCreated(item);
+        super.doCreate(item);
         if ((item instanceof MavenModuleSet)) {
             MavenModuleSet mavenModuleSet = (MavenModuleSet) item;
             preConfigureMavenJob(mavenModuleSet);
@@ -47,7 +52,11 @@ public class MavenConfigurer extends JobConfigurer {
         log.finer("< " + this.getClass().getName() + ".onCreated()");
     }
 
-    private void preConfigureMavenJob(MavenModuleSet mavenModuleSet) {
+    /**
+     *
+     * @param mavenModuleSet
+     */
+    private final void preConfigureMavenJob(@Nullable MavenModuleSet mavenModuleSet) {
         final CreateJobAdvancedPlugin cja = getPlugin();
         if (null == cja) {
             return;
