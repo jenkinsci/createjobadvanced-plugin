@@ -56,4 +56,4 @@ EOF
 EOT
 # Add maven settings for jenkins ci
 RUN mkdir -p /home/${USER_CI}/.m2
-COPY resources/settings.xml /${USER_CI}/.m2
+COPY resources/settings.xml /home/${USER_CI}/.m2
