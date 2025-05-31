@@ -1,5 +1,6 @@
 package hudson.plugins.createjobadvanced;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Plugin;
 import hudson.model.Descriptor.FormException;
 import hudson.security.Permission;
@@ -42,7 +43,7 @@ public class CreateJobAdvancedPlugin extends Plugin {
     private boolean mvnArchivingDisabled;
     private boolean mvnPerModuleEmail;
 
-    private List<DynamicPermissionConfig> dynamicPermissionConfigs = new ArrayList<DynamicPermissionConfig>();
+    private final List<DynamicPermissionConfig> dynamicPermissionConfigs = new ArrayList<>();
 
     /**
      * @return the dynamicPermissionConfigs
@@ -126,7 +127,7 @@ public class CreateJobAdvancedPlugin extends Plugin {
         for (Map.Entry<String, List<Permission>> entry : allPossiblePermissions.entrySet()) {
             for (Permission permission : entry.getValue()) {
                 final String enabled = jsonObject.getString(permission.getId());
-                if (Boolean.valueOf(enabled)) {
+                if (Boolean.parseBoolean(enabled)) {
                     dynPerm.addPermissionId(permission.getId());
                     log.log(Level.FINE, "enable {0}", new String[] {permission.getId()});
                 }
@@ -141,7 +142,7 @@ public class CreateJobAdvancedPlugin extends Plugin {
      * @return
      */
     public static Map<String, List<Permission>> getAllPossiblePermissions() {
-        final Map<String, List<Permission>> enabledPerms = new TreeMap<String, List<Permission>>();
+        final Map<String, List<Permission>> enabledPerms = new TreeMap<>();
 
         addEnabledPermissionsForGroup(enabledPerms, hudson.model.Item.class);
         addEnabledPermissionsForGroup(enabledPerms, hudson.model.Run.class);
@@ -154,9 +155,9 @@ public class CreateJobAdvancedPlugin extends Plugin {
      * @param p
      * @return
      */
-    public static String impliedByList(Permission p) {
+    public static String impliedByList(@Nullable Permission p) {
         List<Permission> impliedBys = new ArrayList<>();
-        while (p.impliedBy != null) {
+        while (null != p && null != p.impliedBy) {
             p = p.impliedBy;
             impliedBys.add(p);
         }
@@ -172,14 +173,14 @@ public class CreateJobAdvancedPlugin extends Plugin {
             final Map<String, List<Permission>> allEnabledPerms, Class<?> owner) {
         final PermissionGroup permissionGroup = PermissionGroup.get(owner);
         if (permissionGroup != null) {
-            final List<Permission> enabledPerms = new ArrayList<Permission>();
+            final List<Permission> enabledPerms = new ArrayList<>();
             List<Permission> permissions = permissionGroup.getPermissions();
             for (Permission permission : permissions) {
                 if (permission.enabled) {
                     enabledPerms.add(permission);
                 }
             }
-            if (enabledPerms.size() > 0) {
+            if (!enabledPerms.isEmpty()) {
                 allEnabledPerms.put(permissionGroup.title.toString(), enabledPerms);
             }
         }

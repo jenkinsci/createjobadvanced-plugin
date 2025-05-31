@@ -104,14 +104,10 @@ public abstract class AbstractConfigurer<T extends AbstractItem, A> {
      * @return plugin configuration instance.identity/
      */
     protected final CreateJobAdvancedPlugin getPlugin() {
+        CreateJobAdvancedPlugin result = null;
         Jenkins instance = Jenkins.getInstanceOrNull();
-        if (null == instance) {
-            log.warning("Jenkins instance is null");
-            return null;
-        }
-        CreateJobAdvancedPlugin result = instance.getPlugin(CreateJobAdvancedPlugin.class);
-        if (null == result) {
-            log.warning("CreateJobAdvancedPlugin is null");
+        if (null != instance) {
+            result = instance.getPlugin(CreateJobAdvancedPlugin.class);
         }
         return result;
     }

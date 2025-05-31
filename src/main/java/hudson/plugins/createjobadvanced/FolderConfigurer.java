@@ -44,14 +44,10 @@ public final class FolderConfigurer extends AbstractConfigurer<AbstractFolder<?>
     @Override
     protected Map<Permission, Set<PermissionEntry>> getGrantedPermissionEntries(
             @Nullable AuthorizationMatrixProperty authProperty) {
-        Map<Permission, Set<PermissionEntry>> result;
-
-        if (null == authProperty) {
-            result = new HashMap<Permission, Set<PermissionEntry>>();
-        } else {
+        Map<Permission, Set<PermissionEntry>> result = new HashMap<Permission, Set<PermissionEntry>>();
+        if (null != authProperty) {
             result = new HashMap<Permission, Set<PermissionEntry>>(authProperty.getGrantedPermissionEntries());
         }
-
         return result;
     }
 
