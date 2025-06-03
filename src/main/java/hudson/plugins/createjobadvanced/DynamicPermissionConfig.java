@@ -6,9 +6,9 @@ import java.util.Set;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class DynamicPermissionConfig {
-    private String groupFormat;
+    private String groupFormat = null;
 
-    private Set<String> checkedPermissionIds = new HashSet<String>();
+    private Set<String> checkedPermissionIds = new HashSet<>();
 
     @DataBoundConstructor
     public DynamicPermissionConfig(String groupFormat, Set<String> checkedPermissionIds) {

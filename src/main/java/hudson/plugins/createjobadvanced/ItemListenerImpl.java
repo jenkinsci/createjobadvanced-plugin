@@ -82,4 +82,8 @@ public class ItemListenerImpl extends ItemListener {
             configurer.doCreate(item);
         }
     }
+
+    protected List<AbstractConfigurer<?, ?>> getConfigurers() {
+        return configurers;
+    }
 }
