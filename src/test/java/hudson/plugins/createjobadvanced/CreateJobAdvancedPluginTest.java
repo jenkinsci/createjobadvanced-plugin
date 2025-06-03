@@ -1,5 +1,16 @@
 package hudson.plugins.createjobadvanced;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.cloudbees.hudson.plugins.folder.Folder;
 import hudson.maven.MavenModuleSet;
 import hudson.maven.reporters.MavenMailer;
@@ -27,18 +38,22 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.matrixauth.PermissionEntry;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.jvnet.hudson.test.recipes.LocalData;
 import org.kohsuke.stapler.StaplerRequest2;
-import org.mockito.Mockito;
 
-public class CreateJobAdvancedPluginTest {
+@WithJenkins
+class CreateJobAdvancedPluginTest {
 
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
+    private JenkinsRule r;
+
+    @BeforeEach
+    void setUp(JenkinsRule rule) {
+        r = rule;
+    }
 
     private void initUser(String username) throws IOException {
         // Initialize a user with the given username.
@@ -49,166 +64,165 @@ public class CreateJobAdvancedPluginTest {
     }
 
     @Test
-    public void testCreateJobAdvancedPlugin() throws Exception {
+    void testCreateJobAdvancedPlugin() {
         // This test checks if the Create Job Advanced plugin can be instantiated.
         CreateJobAdvancedPlugin cja = r.jenkins.getPlugin(CreateJobAdvancedPlugin.class);
-        Assert.assertNotNull("Create Job Advanced Plugin should be instantiated", cja);
-        Assert.assertFalse("Auto owner rights should be false by default", cja.isAutoOwnerRights());
-        Assert.assertFalse("Auto public browse should be false by default", cja.isAutoPublicBrowse());
-        Assert.assertFalse("Replace space should be false by default", cja.isReplaceSpace());
-        Assert.assertFalse("Maven archiving disabled should be false by default", cja.isMvnArchivingDisabled());
-        Assert.assertFalse("Maven per module email should be false by default", cja.isMvnPerModuleEmail());
-        Assert.assertFalse("Active log rotator should be false by default", cja.isActiveLogRotator());
-        Assert.assertEquals("Days to keep should be -1 by default", -1, cja.getDaysToKeep());
-        Assert.assertEquals("Number to keep should be -1 by default", -1, cja.getNumToKeep());
-        Assert.assertEquals("Artifact days to keep should be -1 by default", -1, cja.getArtifactDaysToKeep());
-        Assert.assertEquals("Artifact number to keep should be -1 by default", -1, cja.getArtifactNumToKeep());
-        Assert.assertFalse("Active dynamic permissions should be false by default", cja.isActiveDynamicPermissions());
-        Assert.assertNull("Extract pattern should be null by default", cja.getExtractPattern());
+        assertNotNull(cja, "Create Job Advanced Plugin should be instantiated");
+        assertFalse(cja.isAutoOwnerRights(), "Auto owner rights should be false by default");
+        assertFalse(cja.isAutoPublicBrowse(), "Auto public browse should be false by default");
+        assertFalse(cja.isReplaceSpace(), "Replace space should be false by default");
+        assertFalse(cja.isMvnArchivingDisabled(), "Maven archiving disabled should be false by default");
+        assertFalse(cja.isMvnPerModuleEmail(), "Maven per module email should be false by default");
+        assertFalse(cja.isActiveLogRotator(), "Active log rotator should be false by default");
+        assertEquals(-1, cja.getDaysToKeep(), "Days to keep should be -1 by default");
+        assertEquals(-1, cja.getNumToKeep(), "Number to keep should be -1 by default");
+        assertEquals(-1, cja.getArtifactDaysToKeep(), "Artifact days to keep should be -1 by default");
+        assertEquals(-1, cja.getArtifactNumToKeep(), "Artifact number to keep should be -1 by default");
+        assertFalse(cja.isActiveDynamicPermissions(), "Active dynamic permissions should be false by default");
+        assertNull(cja.getExtractPattern(), "Extract pattern should be null by default");
         List<DynamicPermissionConfig> dynamicPermissionConfigs = cja.getDynamicPermissionConfigs();
-        Assert.assertNotNull("Dynamic permission configs should not be null", dynamicPermissionConfigs);
-        Assert.assertTrue("Dynamic permission configs should be empty by default", dynamicPermissionConfigs.isEmpty());
+        assertNotNull(dynamicPermissionConfigs, "Dynamic permission configs should not be null");
+        assertTrue(dynamicPermissionConfigs.isEmpty(), "Dynamic permission configs should be empty by default");
         Map<String, List<Permission>> allPossiblePermissions = CreateJobAdvancedPlugin.getAllPossiblePermissions();
-        Assert.assertNotNull("All possible permissions should not be null", allPossiblePermissions);
-        Assert.assertTrue("All possible permissions should not be empty", !allPossiblePermissions.isEmpty());
+        assertNotNull(allPossiblePermissions, "All possible permissions should not be null");
+        assertFalse(allPossiblePermissions.isEmpty(), "All possible permissions should not be empty");
         // Iterate through all possible permissions to ensure they are correctly defined.
         for (String group : allPossiblePermissions.keySet()) {
-            Assert.assertNotNull("Group name should not be null", group);
-            Assert.assertFalse("Group name should not be empty", group.isEmpty());
+            assertNotNull(group, "Group name should not be null");
+            assertFalse(group.isEmpty(), "Group name should not be empty");
             List<Permission> permissions = allPossiblePermissions.get(group);
-            Assert.assertNotNull("Permissions list for group " + group + " should not be null", permissions);
-            Assert.assertFalse("Permissions list for group " + group + " should not be empty", permissions.isEmpty());
+            assertNotNull(permissions, "Permissions list for group " + group + " should not be null");
+            assertFalse(permissions.isEmpty(), "Permissions list for group " + group + " should not be empty");
             for (Permission permission : permissions) {
-                Assert.assertNotNull("Permission should not be null", permission);
-                Assert.assertFalse("Permission name should not be empty", permission.name.isEmpty());
-                Assert.assertFalse(
-                        "Permission ID should not be empty", permission.getId().isEmpty());
+                assertNotNull(permission, "Permission should not be null");
+                assertFalse(permission.name.isEmpty(), "Permission name should not be empty");
+                assertFalse(permission.getId().isEmpty(), "Permission ID should not be empty");
             }
         }
     }
 
     @Test
     @LocalData("createJobAdvancedFullConfig")
-    public void fullConfigTest() throws Exception {
+    void fullConfigTest() throws Exception {
         // This test checks if the Create Job Advanced plugin can load a fully configured job from local data.
         // The actual implementation of this test will depend on the specific configurations you have set up in your
         // local data.
-        Assert.assertTrue(r.jenkins.getSecurityRealm() instanceof HudsonPrivateSecurityRealm);
+        assertInstanceOf(HudsonPrivateSecurityRealm.class, r.jenkins.getSecurityRealm());
         ((HudsonPrivateSecurityRealm) r.jenkins.getSecurityRealm()).createAccount("alice", "alice");
-        Assert.assertTrue(r.jenkins.getAuthorizationStrategy() instanceof ProjectMatrixAuthorizationStrategy);
+        assertInstanceOf(ProjectMatrixAuthorizationStrategy.class, r.jenkins.getAuthorizationStrategy());
 
         ProjectMatrixAuthorizationStrategy authorizationStrategy =
                 (ProjectMatrixAuthorizationStrategy) r.jenkins.getAuthorizationStrategy();
-        Assert.assertTrue(authorizationStrategy.hasExplicitPermission(PermissionEntry.user("alice"), Item.CREATE));
-        Assert.assertTrue(authorizationStrategy.hasExplicitPermission(PermissionEntry.user("alice"), Jenkins.READ));
+        assertTrue(authorizationStrategy.hasExplicitPermission(PermissionEntry.user("alice"), Item.CREATE));
+        assertTrue(authorizationStrategy.hasExplicitPermission(PermissionEntry.user("alice"), Jenkins.READ));
 
         CreateJobAdvancedPlugin cja = r.jenkins.getPlugin(CreateJobAdvancedPlugin.class);
-        Assert.assertNotNull("Create Job Advanced Plugin should be instantiated", cja);
-        Assert.assertTrue(cja.isAutoOwnerRights());
-        Assert.assertTrue(cja.isAutoPublicBrowse());
-        Assert.assertTrue(cja.isReplaceSpace());
-        Assert.assertTrue(cja.isMvnArchivingDisabled());
-        Assert.assertTrue(cja.isMvnPerModuleEmail());
-        Assert.assertTrue(cja.isActiveLogRotator());
-        Assert.assertEquals(1, cja.getDaysToKeep());
-        Assert.assertEquals(3, cja.getNumToKeep());
-        Assert.assertEquals(3, cja.getArtifactDaysToKeep());
-        Assert.assertEquals(7, cja.getArtifactNumToKeep());
-        Assert.assertTrue(cja.isActiveDynamicPermissions());
-        Assert.assertEquals(".*", cja.getExtractPattern());
+        assertNotNull(cja, "Create Job Advanced Plugin should be instantiated");
+        assertTrue(cja.isAutoOwnerRights());
+        assertTrue(cja.isAutoPublicBrowse());
+        assertTrue(cja.isReplaceSpace());
+        assertTrue(cja.isMvnArchivingDisabled());
+        assertTrue(cja.isMvnPerModuleEmail());
+        assertTrue(cja.isActiveLogRotator());
+        assertEquals(1, cja.getDaysToKeep());
+        assertEquals(3, cja.getNumToKeep());
+        assertEquals(3, cja.getArtifactDaysToKeep());
+        assertEquals(7, cja.getArtifactNumToKeep());
+        assertTrue(cja.isActiveDynamicPermissions());
+        assertEquals(".*", cja.getExtractPattern());
         List<DynamicPermissionConfig> dynamicPermissionConfigs = cja.getDynamicPermissionConfigs();
-        Assert.assertNotNull(dynamicPermissionConfigs);
-        Assert.assertEquals(1, dynamicPermissionConfigs.size());
+        assertNotNull(dynamicPermissionConfigs);
+        assertEquals(1, dynamicPermissionConfigs.size());
         DynamicPermissionConfig config = dynamicPermissionConfigs.get(0);
-        Assert.assertEquals("authenticated", config.getGroupFormat());
+        assertEquals("authenticated", config.getGroupFormat());
         Map<String, List<Permission>> allPossiblePermissions = CreateJobAdvancedPlugin.getAllPossiblePermissions();
-        Assert.assertNotNull(allPossiblePermissions);
-        Assert.assertEquals(2, allPossiblePermissions.size());
+        assertNotNull(allPossiblePermissions);
+        assertEquals(2, allPossiblePermissions.size());
         // Iterate through all possible permissions to ensure they are correctly defined.
         for (String group : allPossiblePermissions.keySet()) {
-            Assert.assertNotNull(group);
-            Assert.assertFalse(group.isEmpty());
+            assertNotNull(group);
+            assertFalse(group.isEmpty());
             List<Permission> permissions = allPossiblePermissions.get(group);
-            Assert.assertNotNull(permissions);
-            Assert.assertFalse(permissions.isEmpty());
+            assertNotNull(permissions);
+            assertFalse(permissions.isEmpty());
             for (Permission permission : permissions) {
-                Assert.assertNotNull(permission);
-                Assert.assertFalse(permission.name.isEmpty());
-                Assert.assertFalse(permission.getId().isEmpty());
-                Assert.assertTrue(config.isPermissionChecked(permission));
+                assertNotNull(permission);
+                assertFalse(permission.name.isEmpty());
+                assertFalse(permission.getId().isEmpty());
+                assertTrue(config.isPermissionChecked(permission));
             }
         }
     }
 
     @Test
     @LocalData("createJobAdvancedFullConfig")
-    public void freestyleTest() throws Exception {
+    void freestyleTest() throws Exception {
         initUser("alice");
         FreeStyleProject project = createProject(FreeStyleProject.class, "Free Style Project", "alice");
-        Assert.assertEquals(project.getName().replaceAll(" ", "-"), project.getName());
+        assertEquals(project.getName().replaceAll(" ", "-"), project.getName());
         testOwnerRights(project, "alice");
         project.renameTo(project.getName() + " Renamed");
-        Assert.assertEquals(project.getName().replaceAll(" ", "-"), project.getName());
+        assertEquals(project.getName().replaceAll(" ", "-"), project.getName());
     }
 
     @Test
     @LocalData("createJobAdvancedFullConfig")
-    public void mavenTest() throws Exception {
+    void mavenTest() throws Exception {
         initUser("alice");
         MavenModuleSet project = createProject(MavenModuleSet.class, "Maven Module Set", "alice");
-        Assert.assertEquals(project.getName().replaceAll(" ", "-"), project.getName());
+        assertEquals(project.getName().replaceAll(" ", "-"), project.getName());
         testOwnerRights(project, "alice");
-        Assert.assertTrue(project.isArchivingDisabled());
+        assertTrue(project.isArchivingDisabled());
         MavenMailer m = project.getReporters().get(MavenMailer.class);
-        Assert.assertNotNull(m);
-        Assert.assertTrue(m.perModuleEmail);
+        assertNotNull(m);
+        assertTrue(m.perModuleEmail);
         project.renameTo(project.getName() + " Renamed");
-        Assert.assertEquals(project.getName().replaceAll(" ", "-"), project.getName());
+        assertEquals(project.getName().replaceAll(" ", "-"), project.getName());
     }
 
     @Test
     @LocalData("createJobAdvancedFullConfig")
-    public void folderTest() throws Exception {
+    void folderTest() throws Exception {
         initUser("alice");
         Folder project = createProject(Folder.class, "User Folder", "alice");
-        Assert.assertEquals(project.getName().replaceAll(" ", "-"), project.getName());
+        assertEquals(project.getName().replaceAll(" ", "-"), project.getName());
         testOwnerRights(project, "alice");
         project.renameTo(project.getName() + " Renamed");
-        Assert.assertEquals(project.getName().replaceAll(" ", "-"), project.getName());
+        assertEquals(project.getName().replaceAll(" ", "-"), project.getName());
     }
 
     @Test
     @LocalData("createJobAdvancedFullConfig")
-    public void pipelineTest() throws Exception {
+    void pipelineTest() throws Exception {
         initUser("alice");
         WorkflowJob project = createProject(WorkflowJob.class, "Workflow Job", "alice");
-        Assert.assertEquals(project.getName().replaceAll(" ", "-"), project.getName());
+        assertEquals(project.getName().replaceAll(" ", "-"), project.getName());
         testOwnerRights(project, "alice");
         project.renameTo(project.getName() + " Renamed");
-        Assert.assertEquals(project.getName().replaceAll(" ", "-"), project.getName());
+        assertEquals(project.getName().replaceAll(" ", "-"), project.getName());
     }
 
     @Test
     @LocalData("createJobAdvancedFullConfig")
-    public void multibranchTest() throws Exception {
+    void multibranchTest() throws Exception {
         initUser("alice");
         WorkflowMultiBranchProject project =
                 createProject(WorkflowMultiBranchProject.class, "Workflow Multi Branch Project", "alice");
-        Assert.assertEquals(project.getName().replaceAll(" ", "-"), project.getName());
+        assertEquals(project.getName().replaceAll(" ", "-"), project.getName());
         testOwnerRights(project, "alice");
         project.renameTo(project.getName() + " Renamed");
-        Assert.assertEquals(project.getName().replaceAll(" ", "-"), project.getName());
+        assertEquals(project.getName().replaceAll(" ", "-"), project.getName());
     }
 
     @Test
     @LocalData("createJobAdvancedFullConfig")
-    public void organizationFolderTest() throws Exception {
+    void organizationFolderTest() throws Exception {
         initUser("alice");
         OrganizationFolder project = createProject(OrganizationFolder.class, "Organization Folder", "alice");
-        Assert.assertEquals(project.getName().replaceAll(" ", "-"), project.getName());
+        assertEquals(project.getName().replaceAll(" ", "-"), project.getName());
         testOwnerRights(project, "alice");
         project.renameTo(project.getName() + " Renamed");
-        Assert.assertEquals(project.getName().replaceAll(" ", "-"), project.getName());
+        assertEquals(project.getName().replaceAll(" ", "-"), project.getName());
     }
 
     private <T extends TopLevelItem> T createProject(Class<T> jobClass, String name, String creator) throws Exception {
@@ -220,11 +234,11 @@ public class CreateJobAdvancedPluginTest {
         return project;
     }
 
-    private void testOwnerRights(AbstractItem item, String owner) throws Exception {
+    private void testOwnerRights(AbstractItem item, String owner) {
         // This method checks if the owner rights are correctly set for the given job.
         for (Permission permission :
                 new Permission[] {Item.CONFIGURE, Item.BUILD, Item.READ, Item.DELETE, Item.WORKSPACE}) {
-            Assert.assertTrue(item.getACL()
+            assertTrue(item.getACL()
                     .hasPermission2(
                             Objects.requireNonNull(User.get(owner, false, Collections.emptyMap()))
                                     .impersonate2(),
@@ -233,36 +247,35 @@ public class CreateJobAdvancedPluginTest {
     }
 
     @Test
-    public void testConfigureWithDefaultValues() throws Exception {
+    void testConfigureWithDefaultValues() throws Exception {
         // Simulate a request with default values
         JSONObject formData = new JSONObject();
-        StaplerRequest2 req = Mockito.mock(StaplerRequest2.class);
+        StaplerRequest2 req = mock(StaplerRequest2.class);
 
         CreateJobAdvancedPlugin plugin = r.jenkins.getPlugin(CreateJobAdvancedPlugin.class);
-        Assert.assertNotNull(plugin);
+        assertNotNull(plugin);
 
         plugin.configure(req, formData);
 
-        Assert.assertFalse("Auto owner rights should be false by default", plugin.isAutoOwnerRights());
-        Assert.assertFalse("Auto public browse should be false by default", plugin.isAutoPublicBrowse());
-        Assert.assertFalse("Replace space should be false by default", plugin.isReplaceSpace());
-        Assert.assertFalse("Maven archiving disabled should be false by default", plugin.isMvnArchivingDisabled());
-        Assert.assertFalse("Maven per module email should be false by default", plugin.isMvnPerModuleEmail());
-        Assert.assertFalse("Active log rotator should be false by default", plugin.isActiveLogRotator());
-        Assert.assertEquals("Days to keep should be -1 by default", -1, plugin.getDaysToKeep());
-        Assert.assertEquals("Number to keep should be -1 by default", -1, plugin.getNumToKeep());
-        Assert.assertEquals("Artifact days to keep should be -1 by default", -1, plugin.getArtifactDaysToKeep());
-        Assert.assertEquals("Artifact number to keep should be -1 by default", -1, plugin.getArtifactNumToKeep());
-        Assert.assertFalse(
-                "Active dynamic permissions should be false by default", plugin.isActiveDynamicPermissions());
-        Assert.assertNull("Extract pattern should be null by default", plugin.getExtractPattern());
-        Assert.assertTrue(
-                "Dynamic permission configs should be empty by default",
-                plugin.getDynamicPermissionConfigs().isEmpty());
+        assertFalse(plugin.isAutoOwnerRights(), "Auto owner rights should be false by default");
+        assertFalse(plugin.isAutoPublicBrowse(), "Auto public browse should be false by default");
+        assertFalse(plugin.isReplaceSpace(), "Replace space should be false by default");
+        assertFalse(plugin.isMvnArchivingDisabled(), "Maven archiving disabled should be false by default");
+        assertFalse(plugin.isMvnPerModuleEmail(), "Maven per module email should be false by default");
+        assertFalse(plugin.isActiveLogRotator(), "Active log rotator should be false by default");
+        assertEquals(-1, plugin.getDaysToKeep(), "Days to keep should be -1 by default");
+        assertEquals(-1, plugin.getNumToKeep(), "Number to keep should be -1 by default");
+        assertEquals(-1, plugin.getArtifactDaysToKeep(), "Artifact days to keep should be -1 by default");
+        assertEquals(-1, plugin.getArtifactNumToKeep(), "Artifact number to keep should be -1 by default");
+        assertFalse(plugin.isActiveDynamicPermissions(), "Active dynamic permissions should be false by default");
+        assertNull(plugin.getExtractPattern(), "Extract pattern should be null by default");
+        assertTrue(
+                plugin.getDynamicPermissionConfigs().isEmpty(),
+                "Dynamic permission configs should be empty by default");
     }
 
     @Test
-    public void testConfigureWithLogRotator() throws Exception {
+    void testConfigureWithLogRotator() throws Exception {
         // Simulate a request with log rotator configuration
         JSONObject formData = new JSONObject();
         JSONObject logRotatorConfig = new JSONObject();
@@ -272,22 +285,22 @@ public class CreateJobAdvancedPluginTest {
         logRotatorConfig.put("artifactNumToKeep", 20);
         formData.put("activeLogRotator", logRotatorConfig);
 
-        StaplerRequest2 req = Mockito.mock(StaplerRequest2.class);
+        StaplerRequest2 req = mock(StaplerRequest2.class);
 
         CreateJobAdvancedPlugin plugin = r.jenkins.getPlugin(CreateJobAdvancedPlugin.class);
-        Assert.assertNotNull(plugin);
+        assertNotNull(plugin);
 
         plugin.configure(req, formData);
 
-        Assert.assertTrue("Active log rotator should be true", plugin.isActiveLogRotator());
-        Assert.assertEquals("Days to keep should be 5", 5, plugin.getDaysToKeep());
-        Assert.assertEquals("Number to keep should be 10", 10, plugin.getNumToKeep());
-        Assert.assertEquals("Artifact days to keep should be 15", 15, plugin.getArtifactDaysToKeep());
-        Assert.assertEquals("Artifact number to keep should be 20", 20, plugin.getArtifactNumToKeep());
+        assertTrue(plugin.isActiveLogRotator(), "Active log rotator should be true");
+        assertEquals(5, plugin.getDaysToKeep(), "Days to keep should be 5");
+        assertEquals(10, plugin.getNumToKeep(), "Number to keep should be 10");
+        assertEquals(15, plugin.getArtifactDaysToKeep(), "Artifact days to keep should be 15");
+        assertEquals(20, plugin.getArtifactNumToKeep(), "Artifact number to keep should be 20");
     }
 
     @Test
-    public void testConfigureWithDynamicPermissionsSingle() throws Exception {
+    void testConfigureWithDynamicPermissionsSingle() throws Exception {
         // Simulate a request with dynamic permissions configuration
         JSONObject formData = new JSONObject();
         JSONObject dynamicPermissionsConfig = new JSONObject();
@@ -308,43 +321,41 @@ public class CreateJobAdvancedPluginTest {
         dynamicPermissionsConfig.put("cfgs", cfgs);
         formData.put("activeDynamicPermissions", dynamicPermissionsConfig);
 
-        StaplerRequest2 req = Mockito.mock(StaplerRequest2.class);
-        Mockito.when(req.bindJSON(Mockito.eq(DynamicPermissionConfig.class), Mockito.any(JSONObject.class)))
+        StaplerRequest2 req = mock(StaplerRequest2.class);
+        when(req.bindJSON(eq(DynamicPermissionConfig.class), any(JSONObject.class)))
                 .thenReturn(new DynamicPermissionConfig("authenticated", (new HashSet<>())));
 
         CreateJobAdvancedPlugin plugin = r.jenkins.getPlugin(CreateJobAdvancedPlugin.class);
-        Assert.assertNotNull(plugin);
+        assertNotNull(plugin);
 
         plugin.configure(req, formData);
 
-        Assert.assertTrue("Active dynamic permissions should be true", plugin.isActiveDynamicPermissions());
-        Assert.assertEquals("Extract pattern should be .*", ".*", plugin.getExtractPattern());
-        Assert.assertEquals(
-                "Dynamic permission configs should have one entry",
-                1,
-                plugin.getDynamicPermissionConfigs().size());
+        assertTrue(plugin.isActiveDynamicPermissions(), "Active dynamic permissions should be true");
+        assertEquals(".*", plugin.getExtractPattern(), "Extract pattern should be .*");
+        assertEquals(
+                1, plugin.getDynamicPermissionConfigs().size(), "Dynamic permission configs should have one entry");
 
         DynamicPermissionConfig configuredPermCfg =
                 plugin.getDynamicPermissionConfigs().get(0);
-        Assert.assertEquals("authenticated", configuredPermCfg.getGroupFormat());
+        assertEquals("authenticated", configuredPermCfg.getGroupFormat());
 
-        Assert.assertEquals(
+        assertEquals(
                 checkedPermissions.size(),
                 configuredPermCfg.getCheckedPermissionIds().size());
 
         // Check expected checked permissions match checked permissions
         for (Permission perm : checkedPermissions) {
-            Assert.assertTrue(configuredPermCfg.isPermissionChecked(perm));
+            assertTrue(configuredPermCfg.isPermissionChecked(perm));
         }
 
         // Check that checked permissions match only expected checked permissions
         for (String permId : configuredPermCfg.getCheckedPermissionIds()) {
-            Assert.assertTrue(checkedPermissions.contains(Permission.fromId(permId)));
+            assertTrue(checkedPermissions.contains(Permission.fromId(permId)));
         }
     }
 
     @Test
-    public void testConfigureWithDynamicPermissionsArray() throws Exception {
+    void testConfigureWithDynamicPermissionsArray() throws Exception {
         // Simulate a request with dynamic permissions configuration
         JSONObject formData = new JSONObject();
         JSONObject dynamicPermissionsConfig = new JSONObject();
@@ -367,50 +378,48 @@ public class CreateJobAdvancedPluginTest {
         dynamicPermissionsConfig.put("cfgs", cfgs);
         formData.put("activeDynamicPermissions", dynamicPermissionsConfig);
 
-        StaplerRequest2 req = Mockito.mock(StaplerRequest2.class);
-        Mockito.when(req.bindJSON(Mockito.eq(DynamicPermissionConfig.class), Mockito.any(JSONObject.class)))
+        StaplerRequest2 req = mock(StaplerRequest2.class);
+        when(req.bindJSON(eq(DynamicPermissionConfig.class), any(JSONObject.class)))
                 .thenReturn(new DynamicPermissionConfig("authenticated", (new HashSet<>())));
 
         CreateJobAdvancedPlugin plugin = r.jenkins.getPlugin(CreateJobAdvancedPlugin.class);
-        Assert.assertNotNull(plugin);
+        assertNotNull(plugin);
 
         plugin.configure(req, formData);
 
-        Assert.assertTrue("Active dynamic permissions should be true", plugin.isActiveDynamicPermissions());
-        Assert.assertEquals("Extract pattern should be .*", ".*", plugin.getExtractPattern());
-        Assert.assertEquals(
-                "Dynamic permission configs should have one entry",
-                1,
-                plugin.getDynamicPermissionConfigs().size());
+        assertTrue(plugin.isActiveDynamicPermissions(), "Active dynamic permissions should be true");
+        assertEquals(".*", plugin.getExtractPattern(), "Extract pattern should be .*");
+        assertEquals(
+                1, plugin.getDynamicPermissionConfigs().size(), "Dynamic permission configs should have one entry");
 
         DynamicPermissionConfig configuredPermCfg =
                 plugin.getDynamicPermissionConfigs().get(0);
-        Assert.assertEquals("authenticated", configuredPermCfg.getGroupFormat());
+        assertEquals("authenticated", configuredPermCfg.getGroupFormat());
 
-        Assert.assertEquals(
+        assertEquals(
                 checkedPermissions.size(),
                 configuredPermCfg.getCheckedPermissionIds().size());
 
         // Check expected checked permissions match checked permissions
         for (Permission perm : checkedPermissions) {
-            Assert.assertTrue(configuredPermCfg.isPermissionChecked(perm));
+            assertTrue(configuredPermCfg.isPermissionChecked(perm));
         }
 
         // Check that checked permissions match only expected checked permissions
         for (String permId : configuredPermCfg.getCheckedPermissionIds()) {
-            Assert.assertTrue(checkedPermissions.contains(Permission.fromId(permId)));
+            assertTrue(checkedPermissions.contains(Permission.fromId(permId)));
         }
     }
 
     @Test
-    public void testImmpliedByList() {
+    void testImpliedByList() {
         String implies = CreateJobAdvancedPlugin.impliedByList(hudson.model.Item.DISCOVER);
-        Assert.assertTrue(implies.contains("hudson.model.Item.Read"));
+        assertTrue(implies.contains("hudson.model.Item.Read"));
     }
 
     @Test
-    public void testImmpliedByList2() {
+    void testImpliedByList2() {
         String implies = CreateJobAdvancedPlugin.impliedByList(null);
-        Assert.assertTrue(implies.isEmpty());
+        assertTrue(implies.isEmpty());
     }
 }

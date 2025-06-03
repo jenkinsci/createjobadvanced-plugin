@@ -1,40 +1,40 @@
 package hudson.plugins.createjobadvanced;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 import hudson.maven.MavenModuleSet;
 import hudson.maven.reporters.MavenMailer;
-import java.io.IOException;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class MavenConfigurerTest {
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
+@WithJenkins
+class MavenConfigurerTest {
 
-    @Test
-    public void testPreConfigureMavenJob() {
-        try {
-            MavenModuleSet mavenModuleSet = r.jenkins.createProject(MavenModuleSet.class, "test");
-            MavenConfigurer configurer = new MavenConfigurer();
-            mavenModuleSet.getReporters().remove(MavenMailer.class);
-            Assert.assertNull(mavenModuleSet.getReporters().get(MavenMailer.class));
-            configurer.doCreate(mavenModuleSet);
-            Assert.assertNotNull(mavenModuleSet.getReporters().get(MavenMailer.class));
-        } catch (IOException e) {
-            Assert.assertTrue(false);
-        }
+    private JenkinsRule r;
+
+    @BeforeEach
+    void setUp(JenkinsRule rule) {
+        r = rule;
     }
 
     @Test
-    public void testPreConfigureMavenJob2() {
-        try {
-            MavenModuleSet mavenModuleSet = r.jenkins.createProject(MavenModuleSet.class, "test");
-            MavenConfigurer configurer = new MavenConfigurer();
-            Assert.assertNotNull(mavenModuleSet.getReporters().get(MavenMailer.class));
-            configurer.doCreate(mavenModuleSet);
-        } catch (IOException e) {
-            Assert.assertTrue(false);
-        }
+    void testPreConfigureMavenJob() throws Exception {
+        MavenModuleSet mavenModuleSet = r.jenkins.createProject(MavenModuleSet.class, "test");
+        MavenConfigurer configurer = new MavenConfigurer();
+        mavenModuleSet.getReporters().remove(MavenMailer.class);
+        assertNull(mavenModuleSet.getReporters().get(MavenMailer.class));
+        configurer.doCreate(mavenModuleSet);
+        assertNotNull(mavenModuleSet.getReporters().get(MavenMailer.class));
+    }
+
+    @Test
+    void testPreConfigureMavenJob2() throws Exception {
+        MavenModuleSet mavenModuleSet = r.jenkins.createProject(MavenModuleSet.class, "test");
+        MavenConfigurer configurer = new MavenConfigurer();
+        assertNotNull(mavenModuleSet.getReporters().get(MavenMailer.class));
+        configurer.doCreate(mavenModuleSet);
     }
 }
