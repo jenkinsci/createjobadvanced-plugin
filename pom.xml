@@ -54,11 +54,9 @@
 
   <dependencies>
 
-    <!--Upper bounds conflict-->
     <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-      <version>3.11</version>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>commons-lang3-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.main</groupId>
@@ -103,7 +101,6 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>5.5.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

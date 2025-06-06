@@ -1,12 +1,14 @@
 package hudson.plugins.createjobadvanced;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-public class AbstractConfigurerTest {
+import org.junit.jupiter.api.Test;
+
+class AbstractConfigurerTest {
+
     @Test
-    public void nullPluginTest() {
+    void nullPluginTest() {
         MavenConfigurer configurer = new MavenConfigurer();
-        Assert.assertNull(configurer.getPlugin());
+        assertNull(configurer.getPlugin());
     }
 }
