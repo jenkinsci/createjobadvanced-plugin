@@ -13,3 +13,5 @@ When you create a job, it automatically adds all permissions for the creator in 
 
 See [GitHub Releases](https://github.com/jenkinsci/createjobadvanced-plugin/releases).
 For versions 1.8.0 and older, see [CHANGELOG.md](./CHANGELOG.md).
+
+---
