@@ -10,7 +10,7 @@
 
   <groupId>org.jenkins-ci.plugins</groupId>
   <artifactId>createjobadvanced</artifactId>
-  <version>1.10.1-SNAPSHOT</version>
+  <version>${changelist}</version>
   <packaging>hpi</packaging>
   <name>Create Job Advanced</name>
   <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
@@ -30,8 +30,8 @@
   </scm>
 
   <properties>
-    <revision>1.9.1</revision>
     <changelist>-SNAPSHOT</changelist>
+    <gitHubRepo>jenkinsci/createjobadvanced-plugin</gitHubRepo>
     <hpi.compatibleSinceVersion>3.60</hpi.compatibleSinceVersion>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
     <jenkins.baseline>2.479</jenkins.baseline>
