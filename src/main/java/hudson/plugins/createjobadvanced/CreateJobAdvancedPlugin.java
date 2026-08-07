@@ -16,7 +16,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.StaplerRequest2;
 
 /**
@@ -161,7 +160,7 @@ public class CreateJobAdvancedPlugin extends Plugin {
             p = p.impliedBy;
             impliedBys.add(p);
         }
-        return StringUtils.join(impliedBys.stream().map(Permission::getId).collect(Collectors.toList()), " ");
+        return impliedBys.stream().map(Permission::getId).collect(Collectors.joining(" "));
     }
 
     /**
